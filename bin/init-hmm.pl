@@ -19,6 +19,11 @@ use strict;
 use warnings;
 use utf8;
 use Getopt::Long;
+use File::Basename;
+my $PATH;
+BEGIN { $PATH = sub { dirname( (caller)[1] ) }->() }
+use lib "$PATH/../lib";
+use HTKUtil;
 
 my $usage = "USAGE: $0 [-h] [-f 0.01] [-t /tmp] hmms/proto HTK/config1 data/monophones0 data/train/*.mfcc output_dir\n";
 
@@ -42,16 +47,14 @@ if ($help) {
 }
 
 my $scp_fn = "$workdir/mfcc.scp";
-{
-    open my $scp_fh, '>', $scp_fn or die "Couldn't open '$workdir/mfcc.scp' for writing: $!";
-    local $\ = local $, = "\n";
-    print {$scp_fh} glob $mfcc_glob;
-}
+HTKUtil::generate_scp($scp_fn, $mfcc_glob);
 
 my $error = system(qq(HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));
 die "HCompV failed: $!" if $error;
 
 makehmmdefs("$workdir/proto", "$workdir/vFloors", $monophones_fn, $outdir);
+
+link($monophones_fn, "$outdir/phones");
 
 sub makehmmdefs {
     my ($proto_fn, $vFloors_fn, $monophones_fn, $outdir) = @_;
