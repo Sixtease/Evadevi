@@ -41,7 +41,7 @@ sub hmmiter {
     my $mfcc_mask = $opt{mfcc} or die '"mfcc" - wildcard of training parametrized audio files not specified';
     my $t = $opt{t} || '250.0 150.0 1000.0';
     
-    my $scp_fn = "$workdir/mfc.scp";
+    my $scp_fn = "$workdir/mfcc.scp";
     generate_scp($scp_fn, $mfcc_mask);
     
     iterate(from => $indir, to => "$workdir/iter1");
