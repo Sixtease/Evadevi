@@ -39,14 +39,16 @@ GetOptions(
     't=s' => \$workdir,
 );
 
-my ($hmm_proto_fn, $htk_config_fn, $monophones_fn, $mfcc_glob, $outdir) = @ARGV;
+my ($hmm_proto_fn, $htk_config_fn, $monophones_fn, $mfcc_dir, $outdir) = @ARGV;
 
 if ($help) {
     print $usage;
     exit(0)
 }
 
+my $mfcc_glob = "$mfcc_dir/*";
 my $scp_fn = "$workdir/mfcc.scp";
+
 HTKUtil::generate_scp($scp_fn, $mfcc_glob);
 
 my $error = system(qq(HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));

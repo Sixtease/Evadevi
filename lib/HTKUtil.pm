@@ -5,7 +5,7 @@ use utf8;
 use Carp;
 use Exporter qw/import/;
 
-our @EXPORT = qw(generate_scp hmmiter);
+our @EXPORT = qw(generate_scp mlf2scp hmmiter);
 
 sub generate_scp {
     my ($scp_fn, @filelists) = @_;
@@ -29,20 +29,41 @@ sub generate_scp {
     close $scp_fh;
 }
 
+sub mlf2scp {
+    my ($in_fh, $scp_fn, @tmpls) = @_;
+    my @lists = map [], @tmpls;
+    
+    sub expand {
+        my ($tmpl, $fn) = @_;
+        $tmpl =~ s/\*/$fn/;
+        return $tmpl
+    }
+    
+    while (<$in_fh>) {
+        m{^"\*/(.*)\.lab"$} or next;
+        push @{$lists[$_]}, expand($tmpls[$_], $1) for 0 .. $#tmpls;
+    }
+    
+    generate_scp($scp_fn, @lists);
+}
+
 sub hmmiter {
     my (%opt) = @_;
     my $indir   = $opt{indir}  or die '"indir" - directory with starting HMMs not specified';
     my $outdir  = $opt{outdir} or die '"outdir" - output directory not specified';
     my $workdir = $opt{workdir} || '/tmp';
+    my $mfccdir = $opt{mfccdir} or die '"mfccdir" - directory with training parametrized audio files not specified';
     my $iter = $opt{iter} || 9;
     my $config_fn = $opt{conf} or die '"conf" - path to HTK config not specified';
     my $transcription_fn = $opt{mlf} or die '"mlf" - path to transcription file not specified';
     my $phones_fn = $opt{phones} || "$indir/phones";
-    my $mfcc_mask = $opt{mfcc} or die '"mfcc" - wildcard of training parametrized audio files not specified';
     my $t = $opt{t} || '250.0 150.0 1000.0';
     
     my $scp_fn = "$workdir/mfcc.scp";
-    generate_scp($scp_fn, $mfcc_mask);
+    {
+        open my $mlf_fh, '<', $transcription_fn or die "Couldn't open transcription file '$transcription_fn' for reading: $!";
+        mlf2scp($mlf_fh, $scp_fn, "$mfccdir/*.mfcc");
+    }
     
     iterate(from => $indir, to => "$workdir/iter1");
     my $i;
