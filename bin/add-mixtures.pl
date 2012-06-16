@@ -9,7 +9,7 @@
 # --heldout-trans for .mlf non-phonetic transcription and
 # --heldout-dir for directory where corresponding MFCC files reside.
 # The number of reestimation iterations after each split defaults
-# to 9 and is given with the --reest-per-iter option.
+# to 9 and is given with the --reest-per-split option.
 # The --trans and --train-dir options specify analogous transcription
 # (this time phonetic) and MFCC-directory for reestimation.
 # -m specifies that triphones should not be used and monophones only are
@@ -38,7 +38,7 @@ my $heldout_transcription_fn = $ENV{EV_heldout_transcription};
 my $outdir = 'hmms/5-mixtures';
 my $train_dir = $ENV{EV_train_mfcc};
 my $heldout_dir = $ENV{EV_heldout_mfcc};
-my $reest_per_iter = 9;
+my $reest_per_split = 9;
 my $init_mixture_count = 1;
 my $split_all = 0;
 my $split_individual = 0;
@@ -58,7 +58,7 @@ GetOptions(
     'conf=s'            => \$conf_fn,
     'wordlist=s'        => \$wordlist_fn,
     'nummixt=i'         => \$init_mixture_count,
-    'reest-per-iter=i'  => \$reest_per_iter,
+    'reest-per-split=i' => \$reest_per_split,
 );
 
 sub use_triphones() { return not $dont_use_triphones }
@@ -71,8 +71,6 @@ if ($dont_use_triphones) {
 
 my $heldout_scp_fn = "$outdir/heldout-mfc.scp";
 mlf2scp($heldout_transcription_fn, $heldout_scp_fn, "$heldout_dir/*.mfcc");
-my $train_scp_fn = "$outdir/train-mfc.scp";
-mlf2scp($transcription_fn, $train_scp_fn, "$train_dir/*.mfcc");
 
 mkdir $outdir;
 
@@ -99,7 +97,7 @@ sub get_score {
 
 sub split_mixtures {
     my ($hmms, $new_cnt_mixtures, $indir, $outdir) = @_;
-    system(qq(mkdir -p "$outdir/$_")) for ("split", map "reest$_", 1 .. $reest_per_iter);
+    system(qq(mkdir -p "$outdir/split"));
     {
         open my $hed_fh, '>', "$outdir/hed" or die "Couldn't open '$outdir/hed' for writing: $!";
         print {$hed_fh} qq(MU $new_cnt_mixtures {$hmms.state[2-4].mix});
@@ -107,15 +105,19 @@ sub split_mixtures {
     my $err = system(qq(H HHEd -T 1 -A -D -H "$indir/macros" -H "$indir/hmmdefs" -M "$outdir/split" "$outdir/hed" "$phones_fn"));
     die "HHEd failed with status $err" if $err;
     my $prevdir = "$outdir/split";
-    for my $i (reverse(1 .. $reest_per_iter)) {
-        my $curdir = "$outdir/reest$i";
-        $err = system(qq(H HERest -A -D -T 1 -C "$conf_fn" -I "$transcription_fn" -t 250.0 150.0 1000.0 -S "$train_scp_fn" -H "$prevdir/macros" -H "$prevdir/hmmdefs" -M "$curdir" "$phones_fn"));
-        die "HERest failed with status $err" if $err;
-        $prevdir = $curdir;
-    }
+    hmmiter(
+        indir => $prevdir,
+        workdir => $outdir,
+        outdir => "$outdir/reestd",
+        mfccdir => $train_dir,
+        iter => $reest_per_split,
+        conf => $conf_fn,
+        mlf => $transcription_fn,
+        phones => $phones_fn,
+    );
     my $score;
     {
-        $score = get_score("$outdir/reest1");
+        $score = get_score("$outdir/reestd");
         $score->{phone} = $hmms;
         open my $score_fh, '>', "$outdir/score" or die "Couldn't open '$outdir/score' for writing";
         print {$score_fh} "$score\n\n$score->{raw}\n";
@@ -145,9 +147,9 @@ sub split_all {
             return $prevdir
         }
         else {
-            $indir = "$score->{dir}/reest1";
+            $indir = "$score->{dir}/reestd";
             $prev_score = $score;
-            $prevdir = "$prev_score->{dir}/reest1";
+            $prevdir = "$prev_score->{dir}/reestd";
             $MIXTURE_COUNT{'*'}++;
         }
     }
@@ -185,7 +187,7 @@ sub find_best_splits {
             }
         }
         my $max = $scores{max};
-        my $winner = "$max->{dir}/reest1";
+        my $winner = "$max->{dir}/reestd";
         mksymlink($winner, "$stepdir/winner");
         $indir = $winner;
         print "Winner: $winner with $scores{max}{precision}\n";
