@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#echo "*H $@"
+mkdir -p log/htk
+cmd="$1"
+shift
+fn=log/htk/`date '+%s'`-"$cmd"
+echo $cmd "$@" > "$fn"
+exec "$cmd" "$@" >> "$fn"
