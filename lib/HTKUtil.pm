@@ -30,13 +30,21 @@ sub generate_scp {
 }
 
 sub mlf2scp {
-    my ($in_fh, $scp_fn, @tmpls) = @_;
+    my ($in_file, $scp_fn, @tmpls) = @_;
     my @lists = map [], @tmpls;
     
     sub expand {
         my ($tmpl, $fn) = @_;
         $tmpl =~ s/\*/$fn/;
         return $tmpl
+    }
+    
+    my $in_fh;
+    if (ref($in_file) !~ /GLOB|IO/ and -e $in_file) {
+        open $in_fh, '<', $in_file or die "Failed to open transcription file '$in_file': $!";
+    }
+    else {
+        $in_fh = $in_file;
     }
     
     while (<$in_fh>) {
@@ -81,7 +89,7 @@ sub hmmiter {
         my $to = $opt{to};
         mkdir $to;
         local $ENV{LANG} = 'C';
-        my $error = system(qq(HERest -A -D -T 1 -C "$config_fn" -I "$transcription_fn" -t $t -S "$scp_fn" -H "$from/macros" -H "$from/hmmdefs" -M "$to" "$phones_fn"));
+        my $error = system(qq(H HERest -A -D -T 1 -C "$config_fn" -I "$transcription_fn" -t $t -S "$scp_fn" -H "$from/macros" -H "$from/hmmdefs" -M "$to" "$phones_fn"));
         die "HERest ended with error status $error" if $error;
     }
 }
