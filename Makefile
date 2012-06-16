@@ -9,7 +9,7 @@ clean:
 
 hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) data/transcription/train/aligned.mlf $(EV_monophones)
 	mkdir -p hmms/5-mixtures
-	bin/add-mixtures.pl -i $(mixture_opt)
+	bin/add-mixtures.pl -a $(mixture_opt)
 	cat hmms/5-mixtures/winner/hmmdefs > hmms/5-mixtures/hmmdefs
 	cat hmms/5-mixtures/winner/macros  > hmms/5-mixtures/macros
 	cp "$(mixture_phones)" hmms/5-mixtures/phones
