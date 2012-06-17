@@ -4,13 +4,14 @@ mixture_phones?=data/phones/triphones
 
 train: hmms/5-mixtures/hmmdefs
 
-test: hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros hmms/5-mixtures/phones $(EV_LM) $(EV_wordlist_test_phonet) $(EV_test_transcription) $(EV_test_mfcc)
-	bin/hmmeval.pl --hmmdir hmms/5-mixtures --phones hmms/5-mixtures/phones --conf resources/htk-config --LM "$(EV_LM)" --wordlist "$(EV_wordlist_test_phonet)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)"
+test: hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros hmms/5-mixtures/phones data/wordlist/WORDLIST-test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
+	mkdir -p temp/test
+	bin/hmmeval.pl --hmmdir hmms/5-mixtures --workdir temp/test --phones hmms/5-mixtures/phones --conf resources/htk-config --wordlist data/wordlist/WORDLIST-test-unk-phonet --LM "$(EV_LM)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)"
 
 clean:
 	rm -R data hmms temp log
 
-hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) data/transcription/train/aligned.mlf $(EV_monophones)
+hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) data/transcription/train/aligned.mlf $(EV_monophones) data/wordlist/WORDLIST-test-unk-phonet
 	mkdir -p hmms/5-mixtures
 	bin/add-mixtures.pl -a $(mixture_opt)
 	cat hmms/5-mixtures/winner/hmmdefs > hmms/5-mixtures/hmmdefs
@@ -49,3 +50,8 @@ data/wordlist/WORDLIST-train-sil-phonet: $(EV_wordlist_train_phonet)
 data/phones/monophones-nosp: $(EV_monophones)
 	mkdir -p data/phones
 	grep -wv 'sp' < "$(EV_monophones)" > data/phones/monophones-nosp
+
+
+data/wordlist/WORDLIST-test-unk-phonet: $(EV_wordlist_test_phonet)
+	echo '!!UNK  sil' > data/wordlist/WORDLIST-test-unk-phonet
+	perl -pe 's/^(\S+\s+)sp$$/$$1sil/m' < "$(EV_wordlist_test_phonet)" >> data/wordlist/WORDLIST-test-unk-phonet

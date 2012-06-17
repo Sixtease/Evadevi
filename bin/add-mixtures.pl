@@ -33,7 +33,7 @@ my $orig_phones_fn        = my $phones_fn        = 'data/phones/triphones';
 my $orig_starting_hmm     = my $starting_hmm     = 'hmms/4-triphones';
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = 'resources/htk-config';
-my $wordlist_fn = $ENV{EV_wordlist_test_phonet};
+my $wordlist_fn = 'data/wordlist/WORDLIST-test-unk-phonet';
 my $heldout_transcription_fn = $ENV{EV_heldout_transcription};
 my $outdir = 'hmms/5-mixtures';
 my $train_dir = $ENV{EV_train_mfcc};
@@ -104,6 +104,7 @@ sub split_mixtures {
             wordlist => $wordlist_fn,
             phones => $phones_fn,
             transcription => $heldout_transcription_fn,
+            t => '60.0',
         );
         $score->{phone} = $hmms;
         open my $score_fh, '>', "$outdir/score" or die "Couldn't open '$outdir/score' for writing";
@@ -124,6 +125,7 @@ sub split_all {
         wordlist => $wordlist_fn,
         phones => $phones_fn,
         transcription => $heldout_transcription_fn,
+        t => '60.0',
     );
     my $prevdir = $indir;
     $MIXTURE_COUNT{'*'} = $init_mixture_count;
@@ -170,6 +172,7 @@ sub find_best_splits {
         wordlist => $wordlist_fn,
         phones => $phones_fn,
         transcription => $heldout_transcription_fn,
+        t => '60.0',
     );
     $prev_score->{dir} = $indir;
     print "Start score: $prev_score\n";

@@ -20,6 +20,7 @@ GetOptions(\%options, qw(
     wordlist=s
     phones=s
     transcription=s
+    t=s
 ));
 
 my $score = evaluate_hmm(%options);

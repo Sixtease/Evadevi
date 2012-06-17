@@ -6,8 +6,9 @@ $(EV_LM): data/LM/bg.arpa data/wordlist/WORDLIST-test
 
 data/wordlist/WORDLIST-test: $(EV_wordlist_test_phonet)
 	mkdir -p data/wordlist
-	cut -d ' ' -f 1 < "$(EV_wordlist_test_phonet)" > data/wordlist/WORDLIST-test
+	echo '!!UNK' > data/wordlist/WORDLIST-test
+	cut -d ' ' -f 1 < "$(EV_wordlist_test_phonet)" >> data/wordlist/WORDLIST-test
 
 data/LM/bg.arpa: $(EV_corpus) data/wordlist/WORDLIST-test
 	mkdir -p data/LM
-	ngram-count -order 2 -vocab data/wordlist/WORDLIST-test -text "$(EV_corpus)" -lm data/LM/bg.arpa -map-unk '!!UNK'
+	ngram-count -order 2 -vocab data/wordlist/WORDLIST-test -text "$(EV_corpus)" -lm data/LM/bg.arpa -unk -map-unk '!!UNK'
