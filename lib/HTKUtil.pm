@@ -96,15 +96,15 @@ sub hmmiter {
 
 sub evaluate_hmm {
     my %opt = @_;
-    my $hmmdir      = $opt{hmmdir};
-    my $workdir     = $opt{workdir};
-    my $mfccdir     = $opt{mfccdir};
-    my $conf_fn     = $opt{conf};
-    my $lm_fn       = $opt{LM};
-    my $wordlist_fn = $opt{wordlist};
-    my $phones_fn   = $opt{phones};
-    my $trans_fn    = $opt{transcription};
-
+    my $hmmdir      = $opt{hmmdir}        or croak "Missing directory with HMMs to test (hmmdir)";
+    my $workdir     = $opt{workdir} || '/tmp';
+    my $mfccdir     = $opt{mfccdir}       or croak "Missing directory with testing MFCC files (mfccdir)";
+    my $conf_fn     = $opt{conf}          or croak "Missing HTK config file (conf)";
+    my $lm_fn       = $opt{LM}            or croak "Missing language model .lat file (LM)";
+    my $wordlist_fn = $opt{wordlist}      or croak "Missing wordlist file (wordlist)";
+    my $phones_fn   = $opt{phones}        or croak "Missing phones file (phones)";
+    my $trans_fn    = $opt{transcription} or croak "Missing transcription file (transcription)";
+    
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
     
