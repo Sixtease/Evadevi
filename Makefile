@@ -4,6 +4,9 @@ mixture_phones?=data/phones/triphones
 
 train: hmms/5-mixtures/hmmdefs
 
+test: hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros hmms/5-mixtures/phones $(EV_LM) $(EV_wordlist_test_phonet) $(EV_test_transcription) $(EV_test_mfcc)
+	bin/hmmeval.pl --hmmdir hmms/5-mixtures --phones hmms/5-mixtures/phones --conf resources/htk-config --LM "$(EV_LM)" --wordlist "$(EV_wordlist_test_phonet)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)"
+
 clean:
 	rm -R data hmms temp log
 

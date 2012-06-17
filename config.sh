@@ -3,10 +3,12 @@
 # HMM training
 export EV_train_mfcc='given/data/mfcc/train'
 export EV_heldout_mfcc='given/data/mfcc/heldout'
+export EV_test_mfcc='given/data/mfcc/test'
 export EV_wordlist_train_phonet='given/data/wordlist/wl-train-phonet'
 export EV_wordlist_test_phonet='given/data/wordlist/wl-test-phonet'
 export EV_train_transcription='given/data/transcription/train.mlf'
 export EV_heldout_transcription='given/data/transcription/heldout.mlf'
+export EV_test_transcription='given/data/transcription/test.mlf'
 export EV_monophones='given/data/phones/monophones'
 export EV_LM='given/data/LM/bg.lat'
 export EV_use_triphones=''
