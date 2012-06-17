@@ -5,7 +5,7 @@ use utf8;
 use Carp;
 use Exporter qw/import/;
 
-our @EXPORT = qw(generate_scp mlf2scp hmmiter);
+our @EXPORT = qw(generate_scp mlf2scp hmmiter evaluate_hmm);
 
 sub generate_scp {
     my ($scp_fn, @filelists) = @_;
@@ -92,6 +92,60 @@ sub hmmiter {
         my $error = system(qq(H HERest -A -D -T 1 -C "$config_fn" -I "$transcription_fn" -t $t -S "$scp_fn" -H "$from/macros" -H "$from/hmmdefs" -M "$to" "$phones_fn"));
         die "HERest ended with error status $error" if $error;
     }
+}
+
+sub evaluate_hmm {
+    my %opt = @_;
+    my $hmmdir      = $opt{hmmdir};
+    my $workdir     = $opt{workdir};
+    my $mfccdir     = $opt{mfccdir};
+    my $conf_fn     = $opt{conf};
+    my $lm_fn       = $opt{LM};
+    my $wordlist_fn = $opt{wordlist};
+    my $phones_fn   = $opt{phones};
+    my $trans_fn    = $opt{transcription};
+
+    my $scp_fn = "$workdir/eval-mfc.scp";
+    mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
+    
+    unlink "$workdir/recout.mlf";
+    my $err = system(qq(LANG=C H HVite -T 1 -A -D -l '*' -C "$conf_fn" -t 60.0 -H $hmmdir/macros -H $hmmdir/hmmdefs -S "$scp_fn" -i "$workdir/recout.mlf" -w "$lm_fn" -p 0.0 -s 5.0 "$wordlist_fn" "$phones_fn"));
+    die "HVite failed with status $err" if $err;
+    my $eval_command = qq(HResults -I "$trans_fn" "$phones_fn" "$workdir/recout.mlf");
+    open my $eval_command_fh, '-|', $eval_command or die "Couldn't start HResults: $!";
+    my $line;
+    my $raw = '';
+    while (<$eval_command_fh>) {
+        $raw .= $_;
+        if (/Overall Results/ .. /WORD:/) {
+            $line = $_;
+        }
+    }
+    $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
+    return Score->new($1, $raw);
+}
+
+package Score;
+use overload (
+    '""' => sub {
+        my ($self) = @_;
+        return $self->{precision}
+    },
+    '0+' => sub {
+        my ($self) = @_;
+        return $self->{precision}
+    },
+    '<=>' => sub {
+        my ($self, $other) = @_;
+        return ("$self" <=> "$other")
+    },
+);
+sub new {
+    my ($class, $precision, $raw) = @_;
+    return bless {
+        precision => $precision,
+        raw => $raw,
+    }, $class
 }
 
 1

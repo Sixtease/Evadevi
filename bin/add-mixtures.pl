@@ -69,31 +69,9 @@ if ($dont_use_triphones) {
     $starting_hmm     = 'hmms/3-aligned'                       unless $starting_hmm     ne $orig_starting_hmm;
 }
 
-my $heldout_scp_fn = "$outdir/heldout-mfc.scp";
-mlf2scp($heldout_transcription_fn, $heldout_scp_fn, "$heldout_dir/*.mfcc");
-
 mkdir $outdir;
 
 my %MIXTURE_COUNT;
-
-sub get_score {
-    my ($hmmdir) = @_;
-    unlink "$outdir/recout.mlf";
-    my $err = system(qq(LANG=C H HVite -T 1 -A -D -l '*' -C "$conf_fn" -t 60.0 -H $hmmdir/macros -H $hmmdir/hmmdefs -S "$heldout_scp_fn" -i "$outdir/recout.mlf" -w "$lm_fn" -p 0.0 -s 5.0 "$wordlist_fn" "$phones_fn"));
-    die "HVite failed with status $err" if $err;
-    my $eval_command = qq(HResults -I "$heldout_transcription_fn" "$phones_fn" "$outdir/recout.mlf");
-    open my $eval_command_fh, '-|', $eval_command or die "Couldn't start HResults: $!";
-    my $line;
-    my $raw = '';
-    while (<$eval_command_fh>) {
-        $raw .= $_;
-        if (/Overall Results/ .. /WORD:/) {
-            $line = $_;
-        }
-    }
-    $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
-    return Score->new($1, $raw);
-}
 
 sub split_mixtures {
     my ($hmms, $new_cnt_mixtures, $indir, $outdir) = @_;
@@ -117,7 +95,16 @@ sub split_mixtures {
     );
     my $score;
     {
-        $score = get_score("$outdir/reestd");
+        $score = evaluate_hmm(
+            hmmdir => "$outdir/reestd",
+            workdir => $outdir,
+            mfccdir => $heldout_dir,
+            conf => $conf_fn,
+            LM => $lm_fn,
+            wordlist => $wordlist_fn,
+            phones => $phones_fn,
+            transcription => $heldout_transcription_fn,
+        );
         $score->{phone} = $hmms;
         open my $score_fh, '>', "$outdir/score" or die "Couldn't open '$outdir/score' for writing";
         print {$score_fh} "$score\n\n$score->{raw}\n";
@@ -128,7 +115,16 @@ sub split_mixtures {
 sub split_all {
     my $step = '000';
     my $indir = $starting_hmm;
-    my $prev_score = get_score($indir);
+    my $prev_score = evaluate_hmm(
+        hmmdir => $indir,
+        workdir => $outdir,
+        mfccdir => $heldout_dir,
+        conf => $conf_fn,
+        LM => $lm_fn,
+        wordlist => $wordlist_fn,
+        phones => $phones_fn,
+        transcription => $heldout_transcription_fn,
+    );
     my $prevdir = $indir;
     $MIXTURE_COUNT{'*'} = $init_mixture_count;
     print "Start score: $prev_score\n";
@@ -165,7 +161,16 @@ sub find_best_splits {
     
     my $step = '000';
     my $indir = $starting_hmm;
-    my $prev_score = get_score($indir);
+    my $prev_score = evaluate_hmm(
+        hmmdir => $indir,
+        workdir => $outdir,
+        mfccdir => $heldout_dir,
+        conf => $conf_fn,
+        LM => $lm_fn,
+        wordlist => $wordlist_fn,
+        phones => $phones_fn,
+        transcription => $heldout_transcription_fn,
+    );
     $prev_score->{dir} = $indir;
     print "Start score: $prev_score\n";
     STEP:
@@ -242,26 +247,3 @@ sub main {
 }
 
 main();
-
-package Score;
-use overload (
-    '""' => sub {
-        my ($self) = @_;
-        return $self->{precision}
-    },
-    '0+' => sub {
-        my ($self) = @_;
-        return $self->{precision}
-    },
-    '<=>' => sub {
-        my ($self, $other) = @_;
-        return ("$self" <=> "$other")
-    },
-);
-sub new {
-    my ($class, $precision, $raw) = @_;
-    return bless {
-        precision => $precision,
-        raw => $raw,
-    }, $class
-}
