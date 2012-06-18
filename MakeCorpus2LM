@@ -11,4 +11,9 @@ data/wordlist/WORDLIST-test: $(EV_wordlist_test_phonet)
 
 data/LM/bg.arpa: $(EV_corpus) data/wordlist/WORDLIST-test
 	mkdir -p data/LM
-	ngram-count -order 2 -vocab data/wordlist/WORDLIST-test -text "$(EV_corpus)" -lm data/LM/bg.arpa -unk -map-unk '!!UNK'
+	#mkdir -p temp/LM/counts
+	#echo "$(EV_corpus)" > temp/LM/filelist
+	#make-batch-counts temp/LM/filelist 10 cat temp/LM/counts
+	#merge-batch-counts temp/LM/counts
+	#make-big-lm -read temp/LM/counts/filelist-1.ngrams.gz -lm data/LM/bg.arpa -map-unk '!!UNK' -order 2 -vocab given/CNK-vocab
+	ngram-count -order 2 -vocab data/wordlist/WORDLIST-test -text "$(EV_corpus)" -lm data/LM/bg.arpa -map-unk '!!UNK'
