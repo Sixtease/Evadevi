@@ -104,14 +104,16 @@ sub evaluate_hmm {
     my $wordlist_fn = $opt{wordlist}      or croak "Missing wordlist file (wordlist)";
     my $phones_fn   = $opt{phones}        or croak "Missing phones file (phones)";
     my $trans_fn    = $opt{transcription} or croak "Missing transcription file (transcription)";
-    my $t           = $opt{t} || '100.0';
+    my $t           = $opt{t} || $ENV{EV_HVite_t} || '100.0';
+    my $p           = $opt{p} || $ENV{EV_HVite_p} || '0.0';
+    my $s           = $opt{s} || $ENV{EV_HVite_s} || '5.0';
     
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
     
     my $recout_raw_fn = "$workdir/recout-raw.mlf";
     unlink $recout_raw_fn;
-    my $err = system(qq(LANG=C H HVite -T 1 -A -D -l '*' -C "$conf_fn" -t "$t" -H $hmmdir/macros -H $hmmdir/hmmdefs -S "$scp_fn" -i "$recout_raw_fn" -w "$lm_fn" -p 0.0 -s 5.0 "$wordlist_fn" "$phones_fn"));
+    my $err = system(qq(LANG=C H HVite -T 1 -A -D -l '*' -C "$conf_fn" -t "$t" -H $hmmdir/macros -H $hmmdir/hmmdefs -S "$scp_fn" -i "$recout_raw_fn" -w "$lm_fn" -p "$p" -s "$s" "$wordlist_fn" "$phones_fn"));
     die "HVite failed with status $err" if $err;
     
     open my $recout_raw_fh, '<', $recout_raw_fn or die "Couldn't open '$recout_raw_fn': $!";

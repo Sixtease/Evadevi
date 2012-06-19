@@ -13,6 +13,10 @@ export EV_monophones='given/data/phones/monophones'
 export EV_LM='given/data/LM/bg.lat'
 export EV_use_triphones=''
 
+export EV_HVite_p='8.0'
+export EV_HVite_s='6.0'
+export EV_HVite_t='250.0'
+
 if [ -z "$EV_use_triphones" ]; then
     export model_to_add_mixtures_to='hmms/3-aligned'
     export mixture_opt='-m'

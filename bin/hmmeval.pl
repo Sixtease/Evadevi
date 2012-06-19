@@ -10,8 +10,12 @@ use lib "$PATH/../lib";
 use HTKUtil;
 use Getopt::Long;
 
-my %options;
+my $print_brief = 0;
+my %options = (
+    b => \$print_brief,
+);
 GetOptions(\%options, qw(
+    b
     hmmdir=s
     workdir=s
     mfccdir=s
@@ -21,7 +25,14 @@ GetOptions(\%options, qw(
     phones=s
     transcription=s
     t=s
+    p=s
+    s=s
 ));
 
 my $score = evaluate_hmm(%options);
-print "$score->{raw}\n$score\n";
+if ($print_brief) {
+    print "$score\n";
+}
+else {
+    print "$score->{raw}\n$score\n";
+}
