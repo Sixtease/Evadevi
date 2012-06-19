@@ -34,14 +34,15 @@ my $orig_starting_hmm     = my $starting_hmm     = 'hmms/4-triphones';
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = 'resources/htk-config';
 my $wordlist_fn = 'data/wordlist/WORDLIST-test-unk-phonet';
-my $heldout_transcription_fn = $ENV{EV_heldout_transcription};
+my $heldout_transcription_fn = 'data/transcription/heldout.mlf';
 my $outdir = 'hmms/5-mixtures';
 my $train_dir = $ENV{EV_train_mfcc};
-my $heldout_dir = $ENV{EV_heldout_mfcc};
+my $heldout_dir = $ENV{EV_train_mfcc};
 my $reest_per_split = 5;
 my $init_mixture_count = 1;
 my $split_all = 0;
 my $split_individual = 0;
+my $min_mixtures = $ENV{EV_min_mixtures} || 0;
 
 GetOptions(
     'all|a'             => \$split_all,
@@ -59,13 +60,14 @@ GetOptions(
     'wordlist=s'        => \$wordlist_fn,
     'nummixt=i'         => \$init_mixture_count,
     'reest-per-split=i' => \$reest_per_split,
+    'min-mixtures=i'    => \$min_mixtures,
 );
 
 sub use_triphones() { return not $dont_use_triphones }
 
 if ($dont_use_triphones) {
     $transcription_fn = 'data/transcription/train/aligned.mlf' unless $transcription_fn ne $orig_transcription_fn;
-    $phones_fn        = $ENV{EV_monophones}                    unless $phones_fn        ne $orig_phones_fn;
+    $phones_fn        = 'data/phones/monophones'               unless $phones_fn        ne $orig_phones_fn;
     $starting_hmm     = 'hmms/3-aligned'                       unless $starting_hmm     ne $orig_starting_hmm;
 }
 
@@ -138,7 +140,7 @@ sub split_all {
         mkdir $stepdir;
         my $score = try_phone('*', $indir, $stepdir);
         print "$score\n";
-        if ($score <= $prev_score) {
+        if ($score <= $prev_score and $MIXTURE_COUNT{'*'} >= $min_mixtures) {
             print "Winner is $prev_score in $prev_score->{dir}\n";
             unlink "$outdir/winner";
             mksymlink($prevdir, "$outdir/winner");

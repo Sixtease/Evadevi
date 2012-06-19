@@ -152,7 +152,17 @@ use overload (
     },
     '<=>' => sub {
         my ($self, $other) = @_;
-        return ("$self" <=> "$other")
+        if (ref $other eq 'Score') {
+            $other = $other->{precision};
+        }
+        return ($self->{precision} <=> $other)
+    },
+    '*' => sub {
+        my ($self, $other) = @_;
+        if (ref $other eq 'Score') {
+            $other = $other->{precision}
+        }
+        return $self->{precision} * $other
     },
 );
 sub new {
