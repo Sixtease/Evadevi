@@ -75,7 +75,8 @@ sub hmmiter {
     
     iterate(from => $indir, to => "$workdir/iter1");
     my $i;
-    for $i (1 .. $iter-2) {
+    for my $_i (1 .. $iter-2) {
+        $i = $_i;
         my $i1 = $i+1;
         iterate(from => "$workdir/iter$i", to => "$workdir/iter$i1");
     }
