@@ -13,7 +13,7 @@ clean:
 
 hmms/5-mixtures/hmmdefs hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) data/transcription/train/aligned.mlf data/phones/monophones data/wordlist/WORDLIST-test-unk-phonet
 	mkdir -p hmms/5-mixtures
-	EV_HVite_s=5.0 EV_HVite_p=1.0 add-mixtures.pl -a $(mixture_opt)
+	EV_HVite_s=5.0 EV_HVite_p=0.0 add-mixtures.pl -a $(mixture_opt)
 	cat hmms/5-mixtures/winner/hmmdefs > hmms/5-mixtures/hmmdefs
 	cat hmms/5-mixtures/winner/macros  > hmms/5-mixtures/macros
 	cp "$(mixture_phones)" hmms/5-mixtures/phones
@@ -23,7 +23,7 @@ hmms/3-aligned/hmmdefs hmms/3-aligned/macros data/transcription/train/aligned.ml
 	mlf2scp.pl "$(EV_train_mfcc)/*.mfcc" < data/transcription/train/trans.mlf > temp/train-mfc.scp
 	LANG=C H HVite -T 1 -A -D -l '*' -C resources/htk-config -t "$(EV_HVite_t)" -H hmms/2-sp/macros -H hmms/2-sp/hmmdefs -S temp/train-mfc.scp -i temp/trancription-aligned-with-empty.mlf -m -I data/transcription/train/trans.mlf -y lab -a -o SWT -b silence data/wordlist/WORDLIST-train-sil-phonet data/phones/monophones
 	remove-empty-sentences-from-mlf.pl < temp/trancription-aligned-with-empty.mlf > data/transcription/train/aligned.mlf
-	hmmiter.pl --iter 3 --indir hmms/2-sp --outdir hmms/3-aligned --workdir hmms/3-aligned/iterations --mfccdir "$(EV_train_mfcc)" --conf resources/htk-config --mlf data/transcription/train/aligned.mlf --phones data/phones/monophones
+	hmmiter.pl --iter 7 --indir hmms/2-sp --outdir hmms/3-aligned --workdir hmms/3-aligned/iterations --mfccdir "$(EV_train_mfcc)" --conf resources/htk-config --mlf data/transcription/train/aligned.mlf --phones data/phones/monophones
 	hmmeval.pl --hmmdir hmms/3-aligned --workdir temp/test --phones hmms/3-aligned/phones --conf resources/htk-config --wordlist data/wordlist/WORDLIST-test-unk-phonet --LM "$(EV_LM)" --trans data/transcription/heldout.mlf --mfccdir "$(EV_train_mfcc)"
 
 hmms/2-sp/hmmdefs hmms/2-sp/macros: hmms/1-init/hmmdefs hmms/1-init/macros resources/sil.hed data/phones/monophones $(reest_prereq) data/transcription/train/phonetic-nosp.mlf data/wordlist/WORDLIST-test-unk-phonet $(EV_LM) data/transcription/heldout.mlf $(EV_train_mfcc)
@@ -31,7 +31,7 @@ hmms/2-sp/hmmdefs hmms/2-sp/macros: hmms/1-init/hmmdefs hmms/1-init/macros resou
 	cp hmms/1-init/macros hmms/2-sp/base1-sp-added/
 	add-sp.pl < hmms/1-init/hmmdefs > hmms/2-sp/base1-sp-added/hmmdefs
 	H HHEd -T 1 -A -D -H hmms/2-sp/base1-sp-added/macros -H hmms/2-sp/base1-sp-added/hmmdefs -M hmms/2-sp/base2-sp-sil-tied resources/sil.hed data/phones/monophones
-	hmmiter.pl --iter 3 --indir hmms/2-sp/base2-sp-sil-tied --outdir hmms/2-sp --workdir hmms/2-sp/iterations --conf resources/htk-config --mfccdir "$(EV_train_mfcc)" --mlf "data/transcription/train/phonetic-nosp.mlf" --phones data/phones/monophones
+	hmmiter.pl --iter 5 --indir hmms/2-sp/base2-sp-sil-tied --outdir hmms/2-sp --workdir hmms/2-sp/iterations --conf resources/htk-config --mfccdir "$(EV_train_mfcc)" --mlf "data/transcription/train/phonetic-nosp.mlf" --phones data/phones/monophones
 	hmmeval.pl --hmmdir hmms/2-sp --workdir temp/test --phones hmms/2-sp/phones --conf resources/htk-config --wordlist data/wordlist/WORDLIST-test-unk-phonet --LM "$(EV_LM)" --trans data/transcription/heldout.mlf --mfccdir "$(EV_train_mfcc)"
 
 hmms/1-init/hmmdefs hmms/1-init/macros: resources/hmm/proto data/phones/monophones-nosp $(reest_prereq) data/transcription/train/phonetic-nosp.mlf data/wordlist/WORDLIST-test-unk-nosp-phonet $(EV_LM) data/transcription/heldout.mlf $(EV_train_mfcc)
