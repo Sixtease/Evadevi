@@ -27,15 +27,17 @@ use lib "$PATH/../lib";
 use HTKUtil;
 use File::RelativeSymlink qw(mksymlink);
 
+my $wd = $ENV{EV_workdir} || '';
+
 my $dont_use_triphones = 0;
-my $orig_transcription_fn = my $transcription_fn = 'data/transcription/train/aligned-triphones.mlf';
-my $orig_phones_fn        = my $phones_fn        = 'data/phones/triphones';
-my $orig_starting_hmm     = my $starting_hmm     = 'hmms/4-triphones';
+my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/aligned-triphones.mlf";
+my $orig_phones_fn        = my $phones_fn        = "${wd}data/phones/triphones";
+my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/4-triphones";
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = 'resources/htk-config';
-my $wordlist_fn = 'data/wordlist/WORDLIST-test-unk-phonet';
-my $heldout_transcription_fn = 'data/transcription/heldout.mlf';
-my $outdir = 'hmms/5-mixtures';
+my $wordlist_fn = "${wd}data/wordlist/WORDLIST-test-unk-phonet";
+my $heldout_transcription_fn = "${wd}data/transcription/heldout.mlf";
+my $outdir = "${wd}hmms/5-mixtures";
 my $train_dir = $ENV{EV_train_mfcc};
 my $heldout_dir = $ENV{EV_train_mfcc};
 my $reest_per_split = 9;
@@ -66,9 +68,9 @@ GetOptions(
 sub use_triphones() { return not $dont_use_triphones }
 
 if ($dont_use_triphones) {
-    $transcription_fn = 'data/transcription/train/aligned.mlf' unless $transcription_fn ne $orig_transcription_fn;
-    $phones_fn        = 'data/phones/monophones'               unless $phones_fn        ne $orig_phones_fn;
-    $starting_hmm     = 'hmms/3-aligned'                       unless $starting_hmm     ne $orig_starting_hmm;
+    $transcription_fn = "${wd}data/transcription/train/aligned.mlf" unless $transcription_fn ne $orig_transcription_fn;
+    $phones_fn        = "${wd}data/phones/monophones"               unless $phones_fn        ne $orig_phones_fn;
+    $starting_hmm     = "${wd}hmms/3-aligned"                       unless $starting_hmm     ne $orig_starting_hmm;
 }
 
 mkdir $outdir;
