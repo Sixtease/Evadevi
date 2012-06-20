@@ -4,7 +4,10 @@ reest_prereq=$(eh)resources/htk-config $(EV_train_mfcc)
 model_to_add_mixtures_to?=$(wd)hmms/4-triphones
 mixture_phones?=$(wd)data/phones/triphones
 
-train: $(wd)hmms/5-mixtures/hmmdefs
+EV_outdir?=recognizer/
+train: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixtures/phones
+	mkdir -p "$(EV_outdir)"
+	cp "$(wd)hmms/5-mixtures/hmmdefs" "$(wd)hmms/5-mixtures/macros" "$(wd)hmms/5-mixtures/phones" "$(EV_outdir)"
 
 test: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixtures/phones $(wd)data/wordlist/WORDLIST-test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
 	mkdir -p "$(wd)temp/test"

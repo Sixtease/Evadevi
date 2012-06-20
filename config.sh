@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export EV_homedir=~/git/Evadevi/
+export EV_outdir=~/temp/evadevi/recognizer/
 export EV_workdir=~/temp/evadevi/
 
 # HMM training
