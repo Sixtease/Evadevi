@@ -28,13 +28,14 @@ use HTKUtil;
 use File::RelativeSymlink qw(mksymlink);
 
 my $wd = $ENV{EV_workdir} || '';
+my $eh = $ENV{EV_homedir} || '';
 
 my $dont_use_triphones = 0;
 my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/aligned-triphones.mlf";
 my $orig_phones_fn        = my $phones_fn        = "${wd}data/phones/triphones";
 my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/4-triphones";
 my $lm_fn = $ENV{EV_LM};
-my $conf_fn = 'resources/htk-config';
+my $conf_fn = "${eh}resources/htk-config";
 my $wordlist_fn = "${wd}data/wordlist/WORDLIST-test-unk-phonet";
 my $heldout_transcription_fn = "${wd}data/transcription/heldout.mlf";
 my $outdir = "${wd}hmms/5-mixtures";
