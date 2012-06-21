@@ -7,7 +7,7 @@ mixture_phones?=$(wd)data/phones/triphones
 EV_outdir?=recognizer/
 train: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixtures/phones
 	mkdir -p "$(EV_outdir)"
-	cp "$(wd)hmms/5-mixtures/hmmdefs" "$(wd)hmms/5-mixtures/macros" "$(wd)hmms/5-mixtures/phones" "$(EV_outdir)"
+	cp "$(eh)resources/htk-config" "$(wd)hmms/5-mixtures/hmmdefs" "$(wd)hmms/5-mixtures/macros" "$(wd)hmms/5-mixtures/phones" "$(EV_outdir)"
 
 test: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixtures/phones $(wd)data/wordlist/WORDLIST-test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
 	mkdir -p "$(wd)temp/test"
@@ -23,6 +23,7 @@ $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixture
 	cat "$(wd)hmms/5-mixtures/winner/macros"  > "$(wd)hmms/5-mixtures/macros"
 	cp "$(mixture_phones)" "$(wd)hmms/5-mixtures/phones"
 
+EV_HVite_t?=250.0
 $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf: $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros $(wd)data/transcription/train/trans.mlf $(reest_prereq) $(wd)data/wordlist/WORDLIST-train-sil-phonet $(wd)data/phones/monophones
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp" "$(wd)hmms/3-aligned/iterations"
 	mlf2scp.pl "$(EV_train_mfcc)/*.mfcc" < "$(wd)data/transcription/train/trans.mlf" > "$(wd)temp/train-mfc.scp"
