@@ -24,22 +24,28 @@ $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixture
 	cp "$(mixture_phones)" "$(wd)hmms/5-mixtures/phones"
 
 EV_HVite_t?=250.0
+EV_iter3?=$(EV_iter)
+EV_iter3?=2
 $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf: $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros $(wd)data/transcription/train/trans.mlf $(reest_prereq) $(wd)data/wordlist/WORDLIST-train-sil-phonet $(wd)data/phones/monophones
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp" "$(wd)hmms/3-aligned/iterations"
 	mlf2scp.pl "$(EV_train_mfcc)/*.mfcc" < "$(wd)data/transcription/train/trans.mlf" > "$(wd)temp/train-mfc.scp"
 	LANG=C H HVite -T 1 -A -D -l '*' -C "$(eh)resources/htk-config" -t "$(EV_HVite_t)" -H "$(wd)hmms/2-sp/macros" -H "$(wd)hmms/2-sp/hmmdefs" -S "$(wd)temp/train-mfc.scp" -i "$(wd)temp/trancription-aligned-with-empty.mlf" -m -I "$(wd)data/transcription/train/trans.mlf" -y lab -a -o SWT -b silence "$(wd)data/wordlist/WORDLIST-train-sil-phonet" "$(wd)data/phones/monophones"
 	remove-empty-sentences-from-mlf.pl < "$(wd)temp/trancription-aligned-with-empty.mlf" > "$(wd)data/transcription/train/aligned.mlf"
-	hmmiter.pl --iter 7 --indir "$(wd)hmms/2-sp" --outdir "$(wd)hmms/3-aligned" --workdir "$(wd)hmms/3-aligned/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/aligned.mlf" --phones "$(wd)data/phones/monophones"
+	hmmiter.pl --iter "$(EV_iter3)" --indir "$(wd)hmms/2-sp" --outdir "$(wd)hmms/3-aligned" --workdir "$(wd)hmms/3-aligned/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/aligned.mlf" --phones "$(wd)data/phones/monophones"
 	hmmeval.pl --hmmdir "$(wd)hmms/3-aligned" --workdir "$(wd)temp/test" --phones "$(wd)hmms/3-aligned/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/WORDLIST-test-unk-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
+EV_iter2?=$(EV_iter)
+EV_iter2?=2
 $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/WORDLIST-test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/2-sp/iterations" "$(wd)hmms/2-sp/base1-sp-added" "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(wd)temp/test"
 	cp "$(wd)hmms/1-init/macros" "$(wd)hmms/2-sp/base1-sp-added/"
 	add-sp.pl < "$(wd)hmms/1-init/hmmdefs" > "$(wd)hmms/2-sp/base1-sp-added/hmmdefs"
 	H HHEd -T 1 -A -D -H "$(wd)hmms/2-sp/base1-sp-added/macros" -H "$(wd)hmms/2-sp/base1-sp-added/hmmdefs" -M "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(eh)resources/sil.hed" "$(wd)data/phones/monophones"
-	hmmiter.pl --iter 5 --indir "$(wd)hmms/2-sp/base2-sp-sil-tied" --outdir "$(wd)hmms/2-sp" --workdir "$(wd)hmms/2-sp/iterations" --conf "$(eh)resources/htk-config" --mfccdir "$(EV_train_mfcc)" --mlf "$(wd)data/transcription/train/phonetic-nosp.mlf" --phones "$(wd)data/phones/monophones"
+	hmmiter.pl --iter "$(EV_iter2)" --indir "$(wd)hmms/2-sp/base2-sp-sil-tied" --outdir "$(wd)hmms/2-sp" --workdir "$(wd)hmms/2-sp/iterations" --conf "$(eh)resources/htk-config" --mfccdir "$(EV_train_mfcc)" --mlf "$(wd)data/transcription/train/phonetic-nosp.mlf" --phones "$(wd)data/phones/monophones"
 	hmmeval.pl --hmmdir "$(wd)hmms/2-sp" --workdir "$(wd)temp/test" --phones "$(wd)hmms/2-sp/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/WORDLIST-test-unk-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
+EV_iter1?=$(EV_iter)
+EV_iter1?=2
 $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)data/phones/monophones-nosp $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/WORDLIST-test-unk-nosp-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/1-init/aux" "$(wd)hmms/1-init/iterations" "$(wd)hmms/1-init/base" "$(wd)temp/test"
 	init-hmm.pl -t "$(wd)hmms/1-init/aux" "$(eh)resources/hmm/proto" "$(eh)resources/htk-config" "$(wd)data/phones/monophones-nosp" "$(EV_train_mfcc)" "$(wd)hmms/1-init/base"
