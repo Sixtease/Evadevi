@@ -15,7 +15,7 @@ clean:
 	rm -R "$(wd)data" "$(wd)hmms" "$(wd)temp" "$(wd)log"
 
 model_to_add_mixtures_to?=$(wd)hmms/4-triphones
-mixture_phones?=$(wd)data/phones/triphones
+mixture_phones=$(model_to_add_mixtures_to)/phones
 mixture_wordlist?=$(wd)data/wordlist/test-unk-triphonet
 mixture_transcription?=$(wd)data/transcription/train/triphones.mlf
 $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
@@ -24,6 +24,7 @@ $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixture
 	cat "$(wd)hmms/5-mixtures/winner/hmmdefs" > "$(wd)hmms/5-mixtures/hmmdefs"
 	cat "$(wd)hmms/5-mixtures/winner/macros"  > "$(wd)hmms/5-mixtures/macros"
 	cp "$(mixture_phones)" "$(wd)hmms/5-mixtures/phones"
+	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-triphonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
 EV_iter4?=$(EV_iter)
 EV_iter4?=5
