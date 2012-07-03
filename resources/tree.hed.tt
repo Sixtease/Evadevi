@@ -1,0 +1,16 @@
+RO 100 "[% EV_workdir %]hmms/4-triphones/stats"
+
+TR 0
+
+[% INSERT $qs %]
+
+TR 2
+
+[%- DEFAULT tb='350' %]
+[%- FOREACH state IN ['2','3','4'] %][% FOREACH phone IN phones %]
+TB [% tb %] "ST_[% phone %]_[% state %]_"  {("[% phone %]","*-[% phone %]+*","[% phone %]+*","*-[% phone %]").state[[% state %]]}
+[%- END %][% END %]
+
+TR 1
+
+CO "[% EV_workdir %]data/phones/tiedlist"

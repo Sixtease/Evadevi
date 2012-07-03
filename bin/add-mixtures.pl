@@ -31,12 +31,12 @@ my $wd = $ENV{EV_workdir} || '';
 my $eh = $ENV{EV_homedir} || '';
 
 my $dont_use_triphones = 0;
-my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/aligned-triphones.mlf";
-my $orig_phones_fn        = my $phones_fn        = "${wd}data/phones/triphones";
+my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/triphones.mlf";
 my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/4-triphones";
+my $orig_wordlist_fn      = my $wordlist_fn      = "${wd}data/wordlist/test-unk-triphonet";
+my $phones_fn = "$starting_hmm/phones";
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = "${eh}resources/htk-config";
-my $wordlist_fn = "${wd}data/wordlist/WORDLIST-test-unk-phonet";
 my $heldout_transcription_fn = "${wd}data/transcription/heldout.mlf";
 my $outdir = "${wd}hmms/5-mixtures";
 my $train_dir = $ENV{EV_train_mfcc};
@@ -69,9 +69,9 @@ GetOptions(
 sub use_triphones() { return not $dont_use_triphones }
 
 if ($dont_use_triphones) {
-    $transcription_fn = "${wd}data/transcription/train/aligned.mlf" unless $transcription_fn ne $orig_transcription_fn;
-    $phones_fn        = "${wd}data/phones/monophones"               unless $phones_fn        ne $orig_phones_fn;
-    $starting_hmm     = "${wd}hmms/3-aligned"                       unless $starting_hmm     ne $orig_starting_hmm;
+    $transcription_fn = "${wd}data/transcription/train/aligned.mlf" if $transcription_fn eq $orig_transcription_fn;
+    $starting_hmm     = "${wd}hmms/3-aligned"                       if $starting_hmm     eq $orig_starting_hmm;
+    $wordlist_fn      = "${wd}data/wordlist/test-unk-phonet"        if $wordlist_fn      eq $orig_wordlist_fn;
 }
 
 mkdir $outdir;
