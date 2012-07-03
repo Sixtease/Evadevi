@@ -40,7 +40,7 @@ sub mksymlink {
         }
     }
     if ($dirs < 0) {
-        ...
+        die 'unimplemented'
     }
     elsif ($dirs == 0) {
         return symlink($old, $orig_new);

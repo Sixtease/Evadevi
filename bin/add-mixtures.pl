@@ -161,7 +161,7 @@ sub split_all {
 sub find_best_splits {
     my @monophones = do {
         open my $phones_fh, '<', "$phones_fn" or die "Couldn't open '$phones_fn' $!";
-        sort keys { map { s/.*-|\+.*//g; $_ => 1 } <$phones_fh> }
+        sort keys %{ { map { s/.*-|\+.*//g; $_ => 1 } <$phones_fh> } }
     };
     chomp @monophones;
 #    @monophones = qw(sp e o t a i n sil s m l ii j v k p d r u aa b zh nj h sh z tj c x ee ch g f rsh rzh ow uu dj ng aw);
