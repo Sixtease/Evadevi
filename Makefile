@@ -69,7 +69,7 @@ EV_iter1?=2
 $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)data/phones/monophones-nosp $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-nosp-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/1-init/aux" "$(wd)hmms/1-init/iterations" "$(wd)hmms/1-init/base" "$(wd)temp/test"
 	init-hmm.pl -t "$(wd)hmms/1-init/aux" "$(eh)resources/hmm/proto" "$(eh)resources/htk-config" "$(wd)data/phones/monophones-nosp" "$(EV_train_mfcc)" "$(wd)hmms/1-init/base"
-	hmmiter.pl --iter 3 --indir "$(wd)hmms/1-init/base" --outdir "$(wd)hmms/1-init" --workdir "$(wd)hmms/1-init/iterations" --conf "$(eh)resources/htk-config" --mfccdir "$(EV_train_mfcc)" --mlf "$(wd)data/transcription/train/phonetic-nosp.mlf"
+	hmmiter.pl --iter "$(EV_iter1)" --indir "$(wd)hmms/1-init/base" --outdir "$(wd)hmms/1-init" --workdir "$(wd)hmms/1-init/iterations" --conf "$(eh)resources/htk-config" --mfccdir "$(EV_train_mfcc)" --mlf "$(wd)data/transcription/train/phonetic-nosp.mlf"
 	hmmeval.pl --hmmdir "$(wd)hmms/1-init" --workdir "$(wd)temp/test" --phones "$(wd)hmms/1-init/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-nosp-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
 $(wd)data/wordlist/test-unk-triphonet: $(wd)data/phones/triphones $(wd)data/wordlist/test-unk-phonet
