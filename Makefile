@@ -16,7 +16,7 @@ clean:
 
 model_to_add_mixtures_to?=$(wd)hmms/4-triphones
 mixture_phones=$(model_to_add_mixtures_to)/phones
-mixture_wordlist?=$(wd)data/wordlist/test-unk-triphonet
+mixture_wordlist?=$(wd)data/wordlist/test-unk-phonet
 mixture_transcription?=$(wd)data/transcription/train/triphones.mlf
 $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
 	mkdir -p "$(wd)hmms/5-mixtures"
@@ -24,15 +24,16 @@ $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixture
 	cat "$(wd)hmms/5-mixtures/winner/hmmdefs" > "$(wd)hmms/5-mixtures/hmmdefs"
 	cat "$(wd)hmms/5-mixtures/winner/macros"  > "$(wd)hmms/5-mixtures/macros"
 	cp "$(mixture_phones)" "$(wd)hmms/5-mixtures/phones"
-	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-triphonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
+	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
 EV_iter4?=$(EV_iter)
 EV_iter4?=5
-$(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet
+$(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-phonet $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/iterations" "$(wd)hmms/4-triphones/0-nontied/reestd" "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/iterations"
 	
 	mkmktri.hed.pl < "$(wd)data/phones/monophones" > "$(wd)hmms/4-triphones/0-nontied/base/mktri.hed"
 	mktree.hed.pl "$(eh)resources/tree.hed.tt" "$(EV_triphone_tree)" "$(wd)data/phones/monophones" > "$(wd)hmms/4-triphones/1-tied/base/tree.hed"
+	wordlist2triphones.pl "$(wd)data/wordlist/test-unk-phonet" | cat - "$(wd)data/phones/triphones" | sort -u > "$(wd)data/phones/fulllist"
 	
 	LANG=C H HHEd -A -D -T 1 -H "$(wd)hmms/3-aligned/macros" -H "$(wd)hmms/3-aligned/hmmdefs" -M "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/base/mktri.hed" "$(wd)data/phones/monophones"
 	hmmiter.pl --iter "$(EV_iter4)" --indir "$(wd)hmms/4-triphones/0-nontied/base" --outdir "$(wd)hmms/4-triphones/0-nontied/reestd" --workdir "$(wd)hmms/4-triphones/0-nontied/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/triphones.mlf" --phones "$(wd)data/phones/triphones"
@@ -41,7 +42,7 @@ $(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros: $(wd)hmms/3-aligned/
 	LANG=C H HHEd -H "$(wd)hmms/4-triphones/0-nontied/macros" -H "$(wd)hmms/4-triphones/0-nontied/hmmdefs" -M "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/base/tree.hed" "$(wd)data/phones/triphones"
 	hmmiter.pl --iter "$(EV_iter4)" --indir "$(wd)hmms/4-triphones/1-tied/base" --outdir "$(wd)hmms/4-triphones" --workdir "$(wd)hmms/4-triphones/1-tied/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/triphones.mlf" --phones "$(wd)data/phones/tiedlist"
 	
-	hmmeval.pl --hmmdir "$(wd)hmms/4-triphones" --workdir "$(wd)temp/test" --phones "$(wd)hmms/4-triphones/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-triphonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
+	hmmeval.pl --hmmdir "$(wd)hmms/4-triphones" --workdir "$(wd)temp/test" --phones "$(wd)hmms/4-triphones/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
 EV_HVite_t?=250.0
 EV_iter3?=$(EV_iter)
@@ -72,11 +73,8 @@ $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)
 	hmmiter.pl --iter "$(EV_iter1)" --indir "$(wd)hmms/1-init/base" --outdir "$(wd)hmms/1-init" --workdir "$(wd)hmms/1-init/iterations" --conf "$(eh)resources/htk-config" --mfccdir "$(EV_train_mfcc)" --mlf "$(wd)data/transcription/train/phonetic-nosp.mlf"
 	hmmeval.pl --hmmdir "$(wd)hmms/1-init" --workdir "$(wd)temp/test" --phones "$(wd)hmms/1-init/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-nosp-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
-$(wd)data/wordlist/test-unk-triphonet: $(wd)data/phones/triphones $(wd)data/wordlist/test-unk-phonet
-	triphonize-wordlist.pl "$(wd)data/phones/triphones" "$(wd)data/wordlist/test-unk-phonet" > "$(wd)data/wordlist/test-unk-triphonet"
-
-$(wd)data/transcription/train/triphones.mlf: $(wd)data/phones/triphones $(wd)data/transcription/train/aligned.mlf
-	triphonize-mlf.pl "$(wd)data/phones/triphones" < "$(wd)data/transcription/train/aligned.mlf" > "$(wd)data/transcription/train/triphones.mlf"
+$(wd)data/transcription/train/triphones.mlf $(wd)data/phones/triphones: $(wd)data/transcription/train/aligned.mlf
+	H HLEd -n "$(wd)data/phones/triphones" -l '*' -i "$(wd)data/transcription/train/triphones.mlf" "$(eh)resources/mktri.led" "$(wd)data/transcription/train/aligned.mlf"
 
 $(wd)data/transcription/train/phonetic-nosp.mlf: $(EV_wordlist_train_phonet) $(eh)resources/mkphones0.led $(wd)data/transcription/train/trans.mlf
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp"
@@ -87,10 +85,6 @@ $(wd)data/wordlist/train-sil-phonet: $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)data/wordlist"
 	echo 'silence sil' > "$(wd)data/wordlist/train-sil-phonet"
 	cat < "$(EV_wordlist_train_phonet)" >> "$(wd)data/wordlist/train-sil-phonet"
-
-$(wd)data/phones/triphones: $(wd)data/transcription/train/aligned.mlf
-	mkdir -p "$(wd)data/phones"
-	count-triphones.pl < "$(wd)data/transcription/train/aligned.mlf" > "$(wd)data/phones/triphones"
 
 $(wd)data/phones/monophones-nosp: $(wd)data/phones/monophones
 	mkdir -p "$(wd)data/phones"
