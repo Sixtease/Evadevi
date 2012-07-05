@@ -8,7 +8,7 @@ TR 2
 
 [%- DEFAULT tb='350' %]
 [%- FOREACH state IN ['2','3','4'] %][% FOREACH phone IN phones %]
-TB [% tb %] "ST_[% phone %]_[% state %]_"  {("*-[% phone %]+*","[% phone %]+*","*-[% phone %]").state[[% state %]]}
+TB [% tb %] "ST_[% phone %]_[% state %]_"  {("[% phone %]","*-[% phone %]+*","[% phone %]+*","*-[% phone %]").state[[% state %]]}
 [%- END %][% END %]
 
 TR 1
