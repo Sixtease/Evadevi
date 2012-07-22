@@ -1,5 +1,13 @@
 #!/usr/bin/perl
 
+# Converts a phonetic dictionary with monophone-based pronunciations
+# to triphone-based from a list of triphones and fallback biphones
+# and monophones.
+# First argument must be a file with (tri-, bi-, mono-) phones that are to be
+# used for the pronunciations.
+# On input, a monophone-based phonetic dictionary is expected. Converted
+# dictionary is printed to STDOUT.
+
 use strict;
 use warnings;
 use utf8;
