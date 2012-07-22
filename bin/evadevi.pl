@@ -44,7 +44,7 @@ elsif (not defined $ENV{EV_use_triphones}) {
     $ENV{EV_use_triphones} = '1';
 }
 
-$ENV{EV_homedir} ||= $opt{homedir};
+$ENV{EV_homedir} = $opt{homedir} if $opt{homedir};
 if (not $ENV{EV_homedir}) {
     use File::Basename;
     my $PATH = sub { dirname( (caller)[1] ) }->();
@@ -54,10 +54,10 @@ my $homedir = $ENV{EV_homedir};
 die "--homedir option must specify the directory where Evadevi (Makefile, config.sh and resources) resides"
     if not -d $homedir or not -e "$homedir/Makefile" or not -e "$homedir/config.sh" or not -d "$homedir/resources";
 
-$ENV{EV_outdir}  ||= $opt{outdir};
-$ENV{EV_workdir} ||= $opt{workdir};
+$ENV{EV_outdir}  = $opt{outdir}  if $opt{outdir};
+$ENV{EV_workdir} = $opt{workdir} if $opt{workdir};
 
-s{/?$}{/} for grep $_, @ENV{qw(homedir outdir workdir)};
+s{/?$}{/} for grep $_, @ENV{qw(EV_homedir EV_outdir EV_workdir)};
 
 system(qq(. "$homedir/config.sh"; make -f "$homedir/Makefile" train));
 
@@ -101,7 +101,7 @@ dataset.
 
 =item 4. Triphones
 
-The models are split to contextual. This is currently unimplemented and skipped.
+The models are split to contextual.
 
 =item 5. Mixtures
 
@@ -156,8 +156,7 @@ Path to language model in HTK lattice format.
 =item EV_use_triphones
 
 Specifying the C<-m> option or setting the C<EV_use_triphones> environment
-variable to an B<empty string> switches off training a triphone model. Since
-triphones are not yet implemented, this option is necessary.
+variable to an B<empty string> switches off training a triphone model.
 
 =item --homedie
 

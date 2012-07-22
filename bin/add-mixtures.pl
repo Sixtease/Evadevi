@@ -34,7 +34,7 @@ my $dont_use_triphones = 0;
 my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/triphones.mlf";
 my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/4-triphones";
 my $orig_wordlist_fn      = my $wordlist_fn      = "${wd}data/wordlist/test-unk-phonet";
-my $phones_fn = "$starting_hmm/phones";
+my $phones_fn;
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = "${eh}resources/htk-config";
 my $heldout_transcription_fn = "${wd}data/transcription/heldout.mlf";
@@ -73,6 +73,7 @@ if ($dont_use_triphones) {
     $starting_hmm     = "${wd}hmms/3-aligned"                       if $starting_hmm     eq $orig_starting_hmm;
     $wordlist_fn      = "${wd}data/wordlist/test-unk-phonet"        if $wordlist_fn      eq $orig_wordlist_fn;
 }
+$phones_fn = "$starting_hmm/phones" if not defined $phones_fn;
 
 mkdir $outdir;
 
