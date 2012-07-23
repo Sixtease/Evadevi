@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use utf8;
 
-my $tmpl = 'TI T_%1$s {(*-%1$s,*-%1$s+*,%1$s+*).transP}';
+my $tmpl = 'TI T_%1$s {(%1$s,*-%1$s,*-%1$s+*,%1$s+*).transP}';
 
 sub expand {
     return sprintf $tmpl, @_;

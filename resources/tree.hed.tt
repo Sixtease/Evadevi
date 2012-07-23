@@ -13,6 +13,4 @@ TB [% tb %] "ST_[% phone %]_[% state %]_"  {("[% phone %]","*-[% phone %]+*","[%
 
 TR 1
 
-AU "[% EV_workdir %]data/phones/fulllist"
 CO "[% EV_workdir %]data/phones/tiedlist"
-ST "[% EV_workdir %]data/phones/trees"

@@ -33,7 +33,7 @@ my $eh = $ENV{EV_homedir} || '';
 my $dont_use_triphones = 0;
 my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/triphones.mlf";
 my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/4-triphones";
-my $orig_wordlist_fn      = my $wordlist_fn      = "${wd}data/wordlist/test-unk-phonet";
+my $orig_wordlist_fn      = my $wordlist_fn      = "${wd}data/wordlist/test-unk-triphonet";
 my $phones_fn;
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = "${eh}resources/htk-config";
