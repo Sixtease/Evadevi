@@ -24,7 +24,7 @@ $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixture
 	cat "$(wd)hmms/5-mixtures/winner/hmmdefs" > "$(wd)hmms/5-mixtures/hmmdefs"
 	cat "$(wd)hmms/5-mixtures/winner/macros"  > "$(wd)hmms/5-mixtures/macros"
 	cp "$(mixture_phones)" "$(wd)hmms/5-mixtures/phones"
-	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-triphonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
+	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(mixture_wordlist)" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
 EV_iter4?=$(EV_iter)
 EV_iter4?=5
