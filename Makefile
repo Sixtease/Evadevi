@@ -7,9 +7,9 @@ train: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixt
 	mkdir -p "$(EV_outdir)"
 	cp "$(eh)resources/htk-config" "$(wd)hmms/5-mixtures/hmmdefs" "$(wd)hmms/5-mixtures/macros" "$(wd)hmms/5-mixtures/phones" "$(EV_outdir)"
 
-test: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixtures/phones $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
+test: $(EV_outdir)hmmdefs $(EV_outdir)macros $(EV_outdir)phones $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
 	mkdir -p "$(wd)temp/test"
-	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)" -t '100.0'
+	hmmeval.pl --hmmdir "$(EV_outdir)" --workdir "$(wd)temp/test" --phones "$(EV_outdir)phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)" -t '100.0'
 
 clean:
 	rm -R "$(wd)data" "$(wd)hmms" "$(wd)temp" "$(wd)log"
