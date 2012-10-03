@@ -54,7 +54,7 @@ HTKUtil::generate_scp($scp_fn, $mfcc_glob);
 my $error = system(qq(H HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));
 die "HCompV failed: $!" if $error;
 
-makehmmdefs("$workdir/proto", "$workdir/vFloors", $monophones_fn, $outdir);
+makehmmdefs("$hmm_proto_fn", "$workdir/vFloors", $monophones_fn, $outdir);
 
 link($monophones_fn, "$outdir/phones");
 
