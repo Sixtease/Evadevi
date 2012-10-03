@@ -105,9 +105,9 @@ sub evaluate_hmm {
     my $wordlist_fn = $opt{wordlist}      or croak "Missing wordlist file (wordlist)";
     my $phones_fn   = $opt{phones}        or croak "Missing phones file (phones)";
     my $trans_fn    = $opt{transcription} or croak "Missing transcription file (transcription)";
-    my $t           = $opt{t} || $ENV{EV_HVite_t} || '100.0';
-    my $p           = $opt{p} || $ENV{EV_HVite_p} || '0.0';
-    my $s           = $opt{s} || $ENV{EV_HVite_s} || '5.0';
+    my $t           = $opt{t} // $ENV{EV_HVite_t} // '100.0';
+    my $p           = $opt{p} // $ENV{EV_HVite_p} // '0.0';
+    my $s           = $opt{s} // $ENV{EV_HVite_s} // '5.0';
     
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
