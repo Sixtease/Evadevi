@@ -65,7 +65,7 @@ sub hmmiter {
     my $config_fn = $opt{conf} or die '"conf" - path to HTK config not specified';
     my $transcription_fn = $opt{mlf} or die '"mlf" - path to transcription file not specified';
     my $phones_fn = $opt{phones} || "$indir/phones";
-    my $t = $opt{t} || '250.0 150.0 1000.0';
+    my $t = $opt{t} || '250.0 150.0 2000.0';
     
     my $scp_fn = "$workdir/mfcc.scp";
     {
