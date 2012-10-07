@@ -4,6 +4,8 @@ use strict;
 use utf8;
 use Carp;
 use Exporter qw/import/;
+use File::Basename qw(basename);
+use Evadevi::Util qw(run_parallel stringify_options);
 
 our @EXPORT = qw(generate_scp mlf2scp hmmiter evaluate_hmm);
 
@@ -66,6 +68,8 @@ sub hmmiter {
     my $transcription_fn = $opt{mlf} or die '"mlf" - path to transcription file not specified';
     my $phones_fn = $opt{phones} || "$indir/phones";
     my $t = $opt{t} || '250.0 150.0 2000.0';
+    my $parallel_cnt = $opt{parallel_cnt} || $ENV{EV_HERest_p};
+    my $thread_cnt   = $opt{thread_cnt}   || $ENV{EV_thread_cnt} || 1;
     
     my $scp_fn = "$workdir/mfcc.scp";
     {
@@ -90,9 +94,77 @@ sub hmmiter {
         my $to = $opt{to};
         mkdir $to;
         local $ENV{LANG} = 'C';
-        my $error = system(qq(H HERest -A -D -T 1 -C "$config_fn" -I "$transcription_fn" -t $t -S "$scp_fn" -H "$from/macros" -H "$from/hmmdefs" -M "$to" "$phones_fn"));
-        die "HERest ended with error status $error" if $error;
+        my %herest_options = (
+            '-A' => '', '-D' => '', '-T' => 1,
+            '-C' => $config_fn,
+            '-I' => $transcription_fn,
+            '-t' => { val => $t, no_quotes => 1 },
+            '-S' => $scp_fn,
+            '-H' => ["$from/macros", "$from/hmmdefs"],
+            '-M' => $to,
+        );
+        if (not $parallel_cnt) {
+            my $cmd = 'H HERest ' . stringify_options(%herest_options) . " $phones_fn";
+            my $error = system($cmd);
+            die "HERest ended with error status $error" if $error;
+        }
+        else {
+            # run parallel
+            my $thread = 0;
+            my $split = 0;
+            my @scp_part_fns = split_scp($parallel_cnt, $scp_fn, $workdir);
+            my @batch;
+            while ($split < $parallel_cnt) {
+                $herest_options{'-p'} = $split + 1;
+                $herest_options{'-S'} = $scp_part_fns[$split];
+                push @batch, 'H HERest ' . stringify_options(%herest_options) . " $phones_fn";
+                
+                $thread = ($thread+1) % $thread_cnt;
+                if ($thread == 0) {
+                    run_parallel(\@batch);
+                    @batch = ();
+                }
+            } continue {
+                $split++;
+            }
+            if (@batch) {
+                run_parallel(\@batch);
+            }
+            unlink @scp_part_fns;
+            
+            # synthesize
+            my @accumulators = glob "$to/HER*.acc";
+            my $accumulators_fn = "$workdir/accumulators.scp";
+            open my $accumulators_fh, '>', $accumulators_fn or die "Couldn't open '$accumulators_fn': $!";
+            print {$accumulators_fh} "$_\n" for @accumulators;
+            
+            $herest_options{'-p'} = 0;
+            $herest_options{'-S'} = $accumulators_fn;
+            
+            my $cmd = 'H HERest ' . stringify_options(%herest_options) . " $phones_fn";
+            my $error = system $cmd;
+            die "HERest failed with status $error" if $error;
+            unlink @accumulators, $accumulators_fn;
+        }
     }
+}
+
+sub split_scp {
+    my ($count, $scp_fn, $workdir) = @_;
+    return $scp_fn if $count == 1;
+    my $scp_bn = basename $scp_fn;
+    my @rv = map "$workdir/split-$_-$scp_bn", 1 .. $count;
+    my @fhs = map {
+        open my $fh, '>', $_ or die "Couldn't open '$_' for writing: $!";
+        $fh;
+    } @rv;
+    {
+        local @ARGV = $scp_fn;
+        while (<ARGV>) {
+            print {$fhs[$. % @fhs]} $_;
+        }
+    }
+    return(@rv)
 }
 
 sub evaluate_hmm {
@@ -108,14 +180,32 @@ sub evaluate_hmm {
     my $t           = $opt{t} // $ENV{EV_HVite_t} // '100.0';
     my $p           = $opt{p} // $ENV{EV_HVite_p} // '0.0';
     my $s           = $opt{s} // $ENV{EV_HVite_s} // '5.0';
+    my $thread_cnt  = $opt{thread_cnt} || $ENV{EV_thread_cnt} || 1;
     
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
     
     my $recout_raw_fn = "$workdir/recout-raw.mlf";
     unlink $recout_raw_fn;
-    my $err = system(qq(LANG=C H HVite -T 1 -A -D -l '*' -C "$conf_fn" -t "$t" -H $hmmdir/macros -H $hmmdir/hmmdefs -S "$scp_fn" -i "$recout_raw_fn" -w "$lm_fn" -p "$p" -s "$s" "$wordlist_fn" "$phones_fn"));
-    die "HVite failed with status $err" if $err;
+    
+    my @hvite_opt = (
+        '-T' => 1, '-A' => '', '-D' => '',
+        '-l' => '*',
+        '-C' => $conf_fn,
+        '-t' => $t,
+        '-H' => ["$hmmdir/macros", "$hmmdir/hmmdefs"],
+        '-w' => $lm_fn, '-p' => $p, '-s' => $s,
+    );
+    my @scp_part_fns = split_scp($thread_cnt, $scp_fn, $workdir);
+    my @commands = map {;
+        'LANG=C H HVite ' . stringify_options(@hvite_opt, '-S' => $_, '-i' => "$_.recout", '' => [$wordlist_fn, $phones_fn])
+    } @scp_part_fns;
+    
+    run_parallel(\@commands);
+    
+    my @recout_fns = map "$_.recout", @scp_part_fns;
+    merge_mlfs(\@recout_fns, $recout_raw_fn, $scp_fn);
+    unlink @recout_fns;
     
     open my $recout_raw_fh, '<', $recout_raw_fn or die "Couldn't open '$recout_raw_fn': $!";
     my $recout_fn = "$workdir/recout.mlf";
@@ -139,6 +229,49 @@ sub evaluate_hmm {
     }
     $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
     return Score->new($1, $raw);
+}
+
+sub merge_mlfs {
+    my ($mlf_fns, $out_fn, $scp_fn) = @_;
+    open my $scp_fh, '<', $scp_fn or die "Couldn't open '$scp_fn': $!";
+    my @mlf_fhs = map {
+        open my $fh, '<', $_ or die "Couldn't open '$_': $!";
+        $fh
+    } @$mlf_fns;
+    open my $out_fh, '>', $out_fn or die "Couldn't open '$out_fn': $!";
+    
+    # mlf header
+    my $header;
+    $header = <$_> for @mlf_fhs;
+    print {$out_fh} $header;
+    
+    my @top_sents = map {
+        local $/ = "\n.\n";
+        { sent => scalar(<$_>), fh => $_ }
+    } @mlf_fhs;
+    
+    my $sent_id;
+    SENT:
+    while (defined($sent_id = <$scp_fh>)) {
+        chomp $sent_id;
+        my $sent_stem = basename($sent_id);
+        $sent_stem =~ s/\.\w+$//;
+        SOURCE:
+        for my $sent (@top_sents) {
+            # the sentence ID is on the first line of the MLF record (before first newline)
+            my $sent_id_pos = index($sent->{sent}, $sent_stem);
+            my $newline_pos = index($sent->{sent}, "\n");
+            if ($sent_id_pos >= 0 and $sent_id_pos < $newline_pos) {
+                print {$out_fh} $sent->{sent};
+                {
+                    local $/ = "\n.\n";
+                    $sent->{sent} = readline($sent->{fh});
+                }
+                next SENT
+            }
+        }
+        #warn "Sentence '$sent_stem' not found in @$mlf_fns";
+    }
 }
 
 package Score;
