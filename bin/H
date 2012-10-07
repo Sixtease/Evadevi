@@ -4,6 +4,6 @@
 mkdir -p "${EV_workdir}log/htk"
 cmd="$1"
 shift
-fn="$EV_workdir"log/htk/`date '+%s'`-"$cmd"
+fn="$EV_workdir"log/htk/`date '+%s'`-$$-"$cmd"
 echo $cmd "$@" > "$fn"
 exec "$cmd" "$@" >> "$fn"
