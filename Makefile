@@ -59,7 +59,7 @@ EV_iter2?=2
 $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/2-sp/iterations" "$(wd)hmms/2-sp/base1-sp-added" "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(wd)temp/test"
 	cp "$(wd)hmms/1-init/macros" "$(wd)hmms/2-sp/base1-sp-added/"
-	add-sp.pl < "$(wd)hmms/1-init/hmmdefs" > "$(wd)hmms/2-sp/base1-sp-added/hmmdefs"
+	DuplicateSilence.pl "$(wd)hmms/1-init/hmmdefs" > "$(wd)hmms/2-sp/base1-sp-added/hmmdefs"
 	H HHEd -T 1 -A -D -H "$(wd)hmms/2-sp/base1-sp-added/macros" -H "$(wd)hmms/2-sp/base1-sp-added/hmmdefs" -M "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(eh)resources/sil.hed" "$(wd)data/phones/monophones"
 	hmmiter.pl --iter "$(EV_iter2)" --indir "$(wd)hmms/2-sp/base2-sp-sil-tied" --outdir "$(wd)hmms/2-sp" --workdir "$(wd)hmms/2-sp/iterations" --conf "$(eh)resources/htk-config" --mfccdir "$(EV_train_mfcc)" --mlf "$(wd)data/transcription/train/phonetic-nosp.mlf" --phones "$(wd)data/phones/monophones"
 	hmmeval.pl --hmmdir "$(wd)hmms/2-sp" --workdir "$(wd)temp/test" --phones "$(wd)hmms/2-sp/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
