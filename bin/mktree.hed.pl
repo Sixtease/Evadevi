@@ -11,6 +11,9 @@ if (@ARGV != 3) {
 
 my $tmpl_fn = shift;
 my $qs = shift;
+
+die "no triphone tree" if not $qs;
+
 chomp (my @phones = <ARGV>);
 
 my $tt = Template->new(ABSOLUTE => 1);
