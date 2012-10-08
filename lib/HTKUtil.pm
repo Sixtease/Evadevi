@@ -168,6 +168,8 @@ sub split_scp {
 }
 
 sub evaluate_hmm {
+    return print STDERR "Evaluating switched off" if $ENV{EV_no_eval};
+    
     my %opt = @_;
     my $hmmdir      = $opt{hmmdir}        or croak "Missing directory with HMMs to test (hmmdir)";
     my $workdir     = $opt{workdir} || '/tmp';
