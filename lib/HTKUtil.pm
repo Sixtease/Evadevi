@@ -63,11 +63,11 @@ sub hmmiter {
     my $outdir  = $opt{outdir} or die '"outdir" - output directory not specified';
     my $workdir = $opt{workdir} || '/tmp';
     my $mfccdir = $opt{mfccdir} or die '"mfccdir" - directory with training parametrized audio files not specified';
-    my $iter = $opt{iter} || 9;
-    my $config_fn = $opt{conf} or die '"conf" - path to HTK config not specified';
-    my $transcription_fn = $opt{mlf} or die '"mlf" - path to transcription file not specified';
-    my $phones_fn = $opt{phones} || "$indir/phones";
-    my $t = $opt{t} || '250.0 150.0 2000.0';
+    my $iter    = $opt{iter} || 9;
+    my $config_fn        = $opt{conf} or die '"conf" - path to HTK config not specified';
+    my $transcription_fn = $opt{mlf}  or die '"mlf" - path to transcription file not specified';
+    my $phones_fn        = $opt{phones}   || "$indir/phones";
+    my $t            = $opt{t}            || $ENV{EV_HERest_t} or die '"t" param or "EV_HERest_t" must be set for hmmiter';
     my $parallel_cnt = $opt{parallel_cnt} || $ENV{EV_HERest_p};
     my $thread_cnt   = $opt{thread_cnt}   || $ENV{EV_thread_cnt} || 1;
     
