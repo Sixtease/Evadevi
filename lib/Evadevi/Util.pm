@@ -7,6 +7,7 @@ our @EXPORT_OK = qw(run_parallel stringify_options);
 
 sub run_parallel {
     my ($commands) = @_;
+    my %pid2command;
     for my $command (@$commands) {
         my $forked = fork();
         
@@ -17,15 +18,22 @@ sub run_parallel {
                 $command->();
             }
             else {
-                my $error = system($command);
-                if ($error) {
-                    die "command '$command' failed with status $error"
-                }
+                exec($command);
             }
             exit(0);
         }
+        else {
+            $pid2command{$forked} = $command;
+        }
     }
-    wait() for @$commands;
+    for (@$commands) {
+        my $pid = wait();
+        my $status = $?;
+        next if $pid < 0;
+        if ($status > 0) {
+            die "command '$pid2command{$pid}' failed with status $status"
+        }
+    }
 }
 
 sub stringify_options {
