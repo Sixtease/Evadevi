@@ -46,11 +46,12 @@ $(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros: $(wd)hmms/3-aligned/
 EV_HVite_t?=250.0
 EV_iter3?=$(EV_iter)
 EV_iter3?=2
-$(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf: $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros $(wd)data/transcription/train/trans.mlf $(reest_prereq) $(wd)data/wordlist/train-sil-phonet $(wd)data/phones/monophones
+$(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf: $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros $(wd)data/transcription/train/trans.mlf $(reest_prereq) $(wd)data/wordlist/train-sp-sil-phonet $(wd)data/phones/monophones
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp" "$(wd)hmms/3-aligned/iterations"
 	mlf2scp.pl "$(EV_train_mfcc)/*.mfcc" < "$(wd)data/transcription/train/trans.mlf" > "$(wd)temp/train-mfc.scp"
-	LANG=C H HVite -T 1 -A -D -l '*' -C "$(eh)resources/htk-config" -t "$(EV_HVite_t)" -H "$(wd)hmms/2-sp/macros" -H "$(wd)hmms/2-sp/hmmdefs" -S "$(wd)temp/train-mfc.scp" -i "$(wd)temp/trancription-aligned-with-empty.mlf" -m -I "$(wd)data/transcription/train/trans.mlf" -y lab -a -o SWT -b silence "$(wd)data/wordlist/train-sil-phonet" "$(wd)data/phones/monophones"
-	remove-empty-sentences-from-mlf.pl < "$(wd)temp/trancription-aligned-with-empty.mlf" > "$(wd)data/transcription/train/aligned.mlf"
+	LANG=C H HVite -T 1 -A -D -l '*' -C "$(eh)resources/htk-config" -t "$(EV_HVite_t)" -H "$(wd)hmms/2-sp/macros" -H "$(wd)hmms/2-sp/hmmdefs" -S "$(wd)temp/train-mfc.scp" -i "$(wd)temp/trancription-aligned-with-empty.mlf" -m -I "$(wd)data/transcription/train/trans.mlf" -y lab -a -o SWT -b silence "$(wd)data/wordlist/train-sp-sil-phonet" "$(wd)data/phones/monophones"
+	remove-empty-sentences-from-mlf.pl < "$(wd)temp/trancription-aligned-with-empty.mlf" > "$(wd)temp/trancription-aligned-without-empty.mlf"
+	H HLEd -A -D -T 1 -l '*' -i "$(wd)data/transcription/train/aligned.mlf" "$(eh)resources/squeeze-sil.led" "$(wd)temp/trancription-aligned-without-empty.mlf"
 	hmmiter.pl --iter "$(EV_iter3)" --indir "$(wd)hmms/2-sp" --outdir "$(wd)hmms/3-aligned" --workdir "$(wd)hmms/3-aligned/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/aligned.mlf" --phones "$(wd)data/phones/monophones"
 	hmmeval.pl --hmmdir "$(wd)hmms/3-aligned" --workdir "$(wd)temp/test" --phones "$(wd)hmms/3-aligned/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
@@ -82,6 +83,9 @@ $(wd)data/transcription/train/phonetic-nosp.mlf: $(EV_wordlist_train_phonet) $(e
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp"
 	LANG=C H HLEd -l '*' -d $(EV_wordlist_train_phonet) -i "$(wd)temp/phonetic-nosp-missing-sil.mlf" "$(eh)resources/mkphones0.led" "$(wd)data/transcription/train/trans.mlf"
 	add-sil-to-empty-sentences.pl < "$(wd)temp/phonetic-nosp-missing-sil.mlf" > "$(wd)data/transcription/train/phonetic-nosp.mlf"
+
+$(wd)data/wordlist/train-sp-sil-phonet: $(wd)data/wordlist/train-sil-phonet
+	add-sil-variant.pl < "$(wd)data/wordlist/train-sil-phonet" > "$(wd)data/wordlist/train-sp-sil-phonet"
 
 $(wd)data/wordlist/train-sil-phonet: $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)data/wordlist"
