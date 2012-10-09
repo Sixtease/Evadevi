@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 
-# 
+# Initialize HMM from data.
+# - compute variance and flat-start the HMMs;
+# - do a series of training iterations;
+# - evaluate the result;
+# (normally) first step in acoustic model training
 
 use strict;
 use warnings;
