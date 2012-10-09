@@ -29,7 +29,7 @@ my $usage = "USAGE: $0 [-h] [-f 0.01] [-t /tmp] hmms/proto HTK/config1 data/mono
 
 die $usage if @ARGV == 0;
 
-my $f = 0.01;
+my $f;
 my $help;
 my $workdir = '/tmp';
 
@@ -46,45 +46,12 @@ if ($help) {
     exit(0)
 }
 
-my $mfcc_glob = "$mfcc_dir/*";
-my $scp_fn = "$workdir/mfcc.scp";
-
-HTKUtil::generate_scp($scp_fn, $mfcc_glob);
-
-my $error = system(qq(H HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));
-die "HCompV failed: $!" if $error;
-
-makehmmdefs("$workdir/proto", "$workdir/vFloors", $monophones_fn, $outdir);
-
-link($monophones_fn, "$outdir/phones");
-
-sub makehmmdefs {
-    my ($proto_fn, $vFloors_fn, $monophones_fn, $outdir) = @_;
-    
-    open my $proto_fh,      '<', $proto_fn      or die "Couldn't open proto '$workdir/proto' for reading: $!";
-    open my $vFloors_fh,    '<', $vFloors_fn    or die "Couldn't open vFloors '$workdir/vFloors' for reading: $!";
-    open my $monophones_fh, '<', $monophones_fn or die "Couldn't open monophones: '$monophones_fn' for reading: $!";
-    
-    my @proto = <$proto_fh>;
-    my @monophones = <$monophones_fh>;
-    chomp @monophones;
-    
-    open my $macros_fh, '>', "$outdir/macros" or die "Couldn't open '$outdir/macros' for writing: $!";
-    print {$macros_fh} @proto[0 .. 2];
-    print {$macros_fh} <$vFloors_fh>;
-    close $macros_fh;
-    
-    open my $hmmdefs_fh, '>', "$outdir/hmmdefs" or die "Couldn't open '$outdir/hmmdefs' for writing: $!";
-    splice @proto, 0, 3;
-    my $proto = join('', @proto);
-    print {$hmmdefs_fh} "\n";
-    for my $monophone (@monophones) {
-        (my $hmmdef = $proto) =~ s/proto/$monophone/g;
-        print {$hmmdefs_fh} $hmmdef;
-    }
-    close $hmmdefs_fh;
-    
-    close $proto_fh;
-    close $vFloors_fh;
-    close $monophones_fh;
-}
+HTKUtil::init_hmm(
+	f         => $f,
+	workdir   => $workdir,
+	hmm_proto => $hmm_proto_fn,
+	conf      => $htk_config_fn,
+	phones    => $monophones_fn,
+	mfccdir   => $mfcc_dir,
+	outdir 	  => $outdir,
+);
