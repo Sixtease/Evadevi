@@ -86,8 +86,7 @@ sub split_mixtures {
         open my $hed_fh, '>', "$outdir/hed" or die "Couldn't open '$outdir/hed' for writing: $!";
         print {$hed_fh} qq(MU $new_cnt_mixtures {$hmms.state[2-4].mix});
     }
-    my $err = system(qq(H HHEd -T 1 -A -D -H "$indir/macros" -H "$indir/hmmdefs" -M "$outdir/split" "$outdir/hed" "$phones_fn"));
-    die "HHEd failed with status $err" if $err;
+    h(qq(HHEd -T 1 -A -D -H "$indir/macros" -H "$indir/hmmdefs" -M "$outdir/split" "$outdir/hed" "$phones_fn"));
     my $prevdir = "$outdir/split";
     hmmiter(
         indir => $prevdir,

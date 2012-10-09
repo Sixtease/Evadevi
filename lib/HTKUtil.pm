@@ -7,7 +7,31 @@ use Exporter qw/import/;
 use File::Basename qw(basename);
 use Evadevi::Util qw(run_parallel stringify_options);
 
-our @EXPORT = qw(generate_scp mlf2scp hmmiter evaluate_hmm);
+our @EXPORT = qw(generate_scp mlf2scp hmmiter evaluate_hmm h);
+
+sub h {
+    my ($cmd, %opt) = @_;
+    die "EV_workdir env var must be set" if not $ENV{EV_workdir};
+    
+    my ($prg) = split /\s+/, $cmd, 2;
+    
+    my $log_dir = "$ENV{EV_workdir}log/htk";
+    system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
+    my $log_fn = sprintf "$log_dir/" . time() . "-$$-$prg";
+    $cmd .= qq( > "$log_fn");
+    
+    local $ENV{LANG} = $opt{LANG} if $opt{LANG};
+    
+    if ($opt{exec}) {
+        exec $cmd;
+    }
+    my $error = system $cmd;
+    die "'$prg > $log_fn' failed with status $error" if $error;
+}
+sub hsub {
+    my @args = @_;
+    return sub { h(@args) }
+}
 
 sub generate_scp {
     my ($scp_fn, @filelists) = @_;
@@ -104,9 +128,7 @@ sub hmmiter {
             '-M' => $to,
         );
         if (not $parallel_cnt) {
-            my $cmd = 'H HERest ' . stringify_options(%herest_options) . " $phones_fn";
-            my $error = system($cmd);
-            die "HERest ended with error status $error" if $error;
+            h('HERest ' . stringify_options(%herest_options) . " $phones_fn");
         }
         else {
             # run parallel
@@ -117,7 +139,7 @@ sub hmmiter {
             while ($split < $parallel_cnt) {
                 $herest_options{'-p'} = $split + 1;
                 $herest_options{'-S'} = $scp_part_fns[$split];
-                push @batch, 'H HERest ' . stringify_options(%herest_options) . " $phones_fn";
+                push @batch, hsub('HERest ' . stringify_options(%herest_options) . " $phones_fn", exec => 1);
                 
                 $thread = ($thread+1) % $thread_cnt;
                 if ($thread == 0) {
@@ -141,9 +163,7 @@ sub hmmiter {
             $herest_options{'-p'} = 0;
             $herest_options{'-S'} = $accumulators_fn;
             
-            my $cmd = 'H HERest ' . stringify_options(%herest_options) . " $phones_fn";
-            my $error = system $cmd;
-            die "HERest failed with status $error" if $error;
+            h('HERest ' . stringify_options(%herest_options) . " $phones_fn");
             unlink @accumulators, $accumulators_fn;
         }
     }
@@ -200,7 +220,10 @@ sub evaluate_hmm {
     );
     my @scp_part_fns = split_scp($thread_cnt, $scp_fn, $workdir);
     my @commands = map {;
-        'LANG=C H HVite ' . stringify_options(@hvite_opt, '-S' => $_, '-i' => "$_.recout", '' => [$wordlist_fn, $phones_fn])
+        hsub(
+            'HVite ' . stringify_options(@hvite_opt, '-S' => $_, '-i' => "$_.recout", '' => [$wordlist_fn, $phones_fn]),
+            LANG=>'C', 'exec' => 1,
+        );
     } @scp_part_fns;
     
     run_parallel(\@commands);
@@ -290,8 +313,7 @@ sub init_hmm {
 	
 	HTKUtil::generate_scp($scp_fn, $mfcc_glob);
 	
-	my $error = system(qq(H HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));
-	die "HCompV failed: $!" if $error;
+	h(qq(HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));
 	
 	makehmmdefs("$workdir/proto", "$workdir/vFloors", $monophones_fn, $outdir);
 	
