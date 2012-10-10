@@ -31,10 +31,6 @@ GetOptions( \%opt, qw(
     mfccdir=s
     iter=i
     train-mlf=s
-    eval-workdir=s
-    wordlist=s
-    LM=s
-    heldout-mlf=s
 ));
 
 print STDERR (' ' x 8 ), "initializing...\n";
@@ -56,9 +52,11 @@ HTKUtil::hmmiter(
 
 print STDERR (' ' x 8 ), "evaluating...\n";
 my $score = HTKUtil::evaluate_hmm(
-    ( map {; $_ => $opt{$_} } qw(conf mfccdir LM wordlist) ),
+    ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
     hmmdir        => $workdir,
-    workdir       => $opt{'eval-workdir'},
-    transcription => $opt{'heldout-mlf'},
+    workdir       => $ENV{EV_eval_workdir},
+    transcription => $ENV{EV_heldout_mlf},
+    LM            => $ENV{EV_LM},
+    wordlist      => $ENV{EV_default_wordlist},
 );
 print "$score->{raw}\n$score\n";

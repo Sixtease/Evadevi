@@ -19,3 +19,13 @@ fi
 if [ -x hmmiter.pl ]; then : ; else
     export PATH="${EV_homedir}bin:$PATH"
 fi
+
+if [ -z "$EV_default_wordlist" ]; then
+    export EV_default_wordlist="${EV_workdir}data/wordlist/test-unk-nosp-phonet"
+fi
+if [ -z "$EV_heldout_mlf" ]; then
+    export EV_heldout_mlf="${EV_workdir}data/transcription/heldout.mlf"
+fi
+if [ -z "$EV_eval_workdir" ]; then
+    export EV_eval_workdir="${EV_workdir}temp/test"
+fi

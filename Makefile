@@ -67,10 +67,6 @@ $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms
                 --conf="$(eh)resources/htk-config" \
                 --mfccdir="$(EV_train_mfcc)" \
                 --train-mlf="$(wd)data/transcription/train/phonetic-nosp.mlf" \
-                --eval-workdir="$(wd)temp/test" \
-                --wordlist="$(wd)data/wordlist/test-unk-nosp-phonet" \
-                --LM="$(EV_LM)" \
-                --heldout-mlf="$(wd)data/transcription/heldout.mlf"
 
 EV_iter1?=$(EV_iter)
 EV_iter1?=2
@@ -83,10 +79,6 @@ $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)
                 --mfccdir="$(EV_train_mfcc)" \
                 --iter="$(EV_iter1)" \
                 --train-mlf="$(wd)data/transcription/train/phonetic-nosp.mlf" \
-                --eval-workdir="$(wd)temp/test" \
-                --wordlist="$(wd)data/wordlist/test-unk-nosp-phonet" \
-                --LM="$(EV_LM)" \
-                --heldout-mlf="$(wd)data/transcription/heldout.mlf"
 
 
 $(wd)data/wordlist/test-unk-triphonet: $(wd)data/phones/triphones $(wd)data/wordlist/test-unk-phonet
