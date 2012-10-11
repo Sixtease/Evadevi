@@ -7,20 +7,12 @@
 use strict;
 use warnings;
 use utf8;
-use open qw(:std :utf8);
 
-my %phones_to_ignore = (
-    sil => 1,
-    sp => 1,
-);
+use File::Basename;
+my $PATH;
+BEGIN { $PATH = sub { dirname( (caller)[1] ) }->() }
+use lib "$PATH/../lib";
 
-print scalar(<>);  # pass header through
-{
-    local $/ = "\n.\n";
-    while (<>) {
-        my ($header, @lines) = split /\n/;
-        if (grep {/\w/ and not $phones_to_ignore{$_}} @lines) {
-            print;
-        }
-    }
-}
+use HTKUtil;
+
+HTKUtil::remove_empty_sentences_from_mlf(*STDIN{IO}, *STDOUT{IO});

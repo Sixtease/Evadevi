@@ -369,8 +369,20 @@ sub init_hmm {
 sub remove_empty_sentences_from_mlf {
     my ($in_fn, $out_fn) = @_;
     
-    open my $in_fh,  '<:utf8', $in_fn  or die "Couldn't open '$in_fn': $!";
-    open my $out_fh, '>:utf8', $out_fn or die "Couldn't open '$out_fn': $!";
+    my $in_fh;
+    if (ref($in_fn) =~ /\bIO\b/) {
+        $in_fh = $in_fn;
+    }
+    else {
+        open $in_fh,  '<:utf8', $in_fn  or die "Couldn't open '$in_fn': $!";
+    }
+    my $out_fh;
+    if (ref($out_fn) =~ /\bIO\b/) {
+        $out_fh = $out_fn;
+    }
+    else {
+        open $out_fh, '>:utf8', $out_fn or die "Couldn't open '$out_fn': $!";
+    }
     
     my %phones_to_ignore = (
         sil => 1,
