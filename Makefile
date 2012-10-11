@@ -66,7 +66,8 @@ EV_iter2?=2
 $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic.mlf $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/2-sp/iterations" "$(wd)hmms/2-sp/base1-sp-added" "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(wd)temp/test"
 	cp "$(wd)hmms/1-init/macros" "$(wd)hmms/2-sp/base1-sp-added/"
-	step-sp.pl --outdir="$(wd)hmms/2-sp" \
+	step-sp.pl \
+                --outdir="$(wd)hmms/2-sp" \
                 --indir="$(wd)hmms/1-init" \
                 --phones="$(wd)data/phones/monophones" \
                 --iter="$(EV_iter2)" \
@@ -78,7 +79,8 @@ EV_iter1?=$(EV_iter)
 EV_iter1?=2
 $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)data/phones/monophones-nosp $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-nosp-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/1-init/aux" "$(wd)hmms/1-init/iterations" "$(wd)hmms/1-init/base" "$(wd)temp/test"
-	step-init.pl --workdir="$(wd)hmms/1-init" \
+	step-init.pl \
+                --workdir="$(wd)hmms/1-init" \
                 --init-proto="$(eh)resources/hmm/proto" \
                 --conf="$(eh)resources/htk-config" \
                 --phones="$(wd)data/phones/monophones-nosp" \
