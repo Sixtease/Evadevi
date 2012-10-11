@@ -244,7 +244,7 @@ sub evaluate_hmm {
         '-S' => $scp_fn,
         '-i' => $recout_raw_fn,
     );
-    my @hvite_arg = [$wordlist_fn, $phones_fn];
+    my @hvite_arg = ($wordlist_fn, $phones_fn);
     hvite_parallel(\%hvite_opt, \@hvite_arg, workdir => $workdir, thread_cnt => $thread_cnt);
     
     open my $recout_raw_fh, '<', $recout_raw_fn or die "Couldn't open '$recout_raw_fn': $!";
