@@ -63,7 +63,7 @@ $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/t
 
 EV_iter2?=$(EV_iter)
 EV_iter2?=2
-$(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
+$(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic.mlf $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/2-sp/iterations" "$(wd)hmms/2-sp/base1-sp-added" "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(wd)temp/test"
 	cp "$(wd)hmms/1-init/macros" "$(wd)hmms/2-sp/base1-sp-added/"
 	step-sp.pl --outdir="$(wd)hmms/2-sp" \
@@ -72,7 +72,7 @@ $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms
                 --iter="$(EV_iter2)" \
                 --conf="$(eh)resources/htk-config" \
                 --mfccdir="$(EV_train_mfcc)" \
-                --train-mlf="$(wd)data/transcription/train/phonetic-nosp.mlf"
+                --train-mlf="$(wd)data/transcription/train/phonetic.mlf"
 
 EV_iter1?=$(EV_iter)
 EV_iter1?=2
@@ -91,6 +91,11 @@ $(wd)data/wordlist/test-unk-triphonet: $(wd)data/phones/triphones $(wd)data/word
 
 $(wd)data/transcription/train/triphones.mlf: $(wd)data/phones/triphones $(wd)data/transcription/train/aligned.mlf
 	triphonize-mlf.pl "$(wd)data/phones/triphones" < "$(wd)data/transcription/train/aligned.mlf" > "$(wd)data/transcription/train/triphones.mlf"
+
+$(wd)data/transcription/train/phonetic.mlf: $(EV_wordlist_train_phonet) $(eh)resources/mkphones1.led $(wd)data/transcription/train/trans.mlf
+	mkdir -p "$(wd)data/transcription/train" "$(wd)temp"
+	LANG=C H HLEd -l '*' -d $(EV_wordlist_train_phonet) -i "$(wd)temp/phonetic-missing-sil.mlf" "$(eh)resources/mkphones1.led" "$(wd)data/transcription/train/trans.mlf"
+	add-sil-to-empty-sentences.pl < "$(wd)temp/phonetic-missing-sil.mlf" > "$(wd)data/transcription/train/phonetic.mlf"
 
 $(wd)data/transcription/train/phonetic-nosp.mlf: $(EV_wordlist_train_phonet) $(eh)resources/mkphones0.led $(wd)data/transcription/train/trans.mlf
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp"
