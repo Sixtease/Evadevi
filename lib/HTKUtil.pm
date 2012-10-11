@@ -32,6 +32,30 @@ sub hsub {
     my @args = @_;
     return sub { h(@args) }
 }
+sub hvite_parallel {
+    my ($hvite_options, $hvite_args, %opt) = @_;
+    my %hvite_opt = %$hvite_options;
+    my $scp_fn = $hvite_opt{'-S'};
+    my $recout_fn = $hvite_opt{'-i'};
+    my $workdir = $opt{workdir} || '/tmp';
+    my $thread_cnt = $opt{thread_cnt} || $ENV{EV_thread_cnt};
+    
+    my @scp_part_fns = split_scp($thread_cnt, $scp_fn, $workdir);
+    my @commands = map {;
+        $hvite_opt{'-S'} = $_;
+        $hvite_opt{'-i'} = "$_.recout";
+        hsub(
+            'HVite ' . stringify_options(%hvite_opt, '' => $hvite_args),
+            LANG=>'C', 'exec' => 1,
+        );
+    } @scp_part_fns;
+
+    run_parallel(\@commands);
+    
+    my @recout_fns = map "$_.recout", @scp_part_fns;
+    merge_mlfs(\@recout_fns, $recout_fn, $scp_fn);
+    unlink @recout_fns;
+}
 
 sub generate_scp {
     my ($scp_fn, @filelists) = @_;
@@ -210,27 +234,18 @@ sub evaluate_hmm {
     my $recout_raw_fn = "$workdir/recout-raw.mlf";
     unlink $recout_raw_fn;
     
-    my @hvite_opt = (
+    my %hvite_opt = (
         '-T' => 1, '-A' => '', '-D' => '',
         '-l' => '*',
         '-C' => $conf_fn,
         '-t' => $t,
         '-H' => ["$hmmdir/macros", "$hmmdir/hmmdefs"],
         '-w' => $lm_fn, '-p' => $p, '-s' => $s,
+        '-S' => $scp_fn,
+        '-i' => $recout_raw_fn,
     );
-    my @scp_part_fns = split_scp($thread_cnt, $scp_fn, $workdir);
-    my @commands = map {;
-        hsub(
-            'HVite ' . stringify_options(@hvite_opt, '-S' => $_, '-i' => "$_.recout", '' => [$wordlist_fn, $phones_fn]),
-            LANG=>'C', 'exec' => 1,
-        );
-    } @scp_part_fns;
-    
-    run_parallel(\@commands);
-    
-    my @recout_fns = map "$_.recout", @scp_part_fns;
-    merge_mlfs(\@recout_fns, $recout_raw_fn, $scp_fn);
-    unlink @recout_fns;
+    my @hvite_arg = [$wordlist_fn, $phones_fn];
+    hvite_parallel(\%hvite_opt, \@hvite_arg, workdir => $workdir, thread_cnt => $thread_cnt);
     
     open my $recout_raw_fh, '<', $recout_raw_fn or die "Couldn't open '$recout_raw_fn': $!";
     my $recout_fn = "$workdir/recout.mlf";
@@ -348,6 +363,29 @@ sub init_hmm {
         close $proto_fh;
         close $vFloors_fh;
         close $monophones_fh;
+    }
+}
+
+sub remove_empty_sentences_from_mlf {
+    my ($in_fn, $out_fn) = @_;
+    
+    open my $in_fh,  '<:utf8', $in_fn  or die "Couldn't open '$in_fn': $!";
+    open my $out_fh, '>:utf8', $out_fn or die "Couldn't open '$out_fn': $!";
+    
+    my %phones_to_ignore = (
+        sil => 1,
+        sp => 1,
+    );
+    
+    print {$out_fh} scalar <$in_fh>; # pass header through
+    {
+        local $/ = "\n.\n";
+        while (<$in_fh>) {
+            my ($header, @lines) = split /\n/;
+            if (grep {/\w/ and not $phones_to_ignore{$_}} @lines) {
+                print {$out_fh} $_;
+            }
+        }
     }
 }
 

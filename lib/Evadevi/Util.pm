@@ -37,13 +37,12 @@ sub run_parallel {
 }
 
 sub stringify_options {
-    my %opt = @_;
     my @parts;
     for my $i (0 .. $#_) {
         next if $i % 2;
         
         my $o = $_[$i];
-        my $vs = $opt{$o};
+        my $vs = $_[$i+1];
         
         warn "option not starting with dash: '$o' in '@_'" if substr($o,0,1) ne '-' and length $o > 0;
         
