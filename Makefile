@@ -30,18 +30,19 @@ EV_iter4?=$(EV_iter)
 EV_iter4?=5
 $(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/iterations" "$(wd)hmms/4-triphones/0-nontied/reestd" "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/iterations"
+	step-triphones.pl \
+                --monophones="$(wd)data/phones/monophones" \
+                --triphones="$(wd)data/phones/triphones" \
+                --tiedlist="$(wd)data/phones/tiedlist" \
+                --indir="$(wd)hmms/3-aligned" \
+                --outdir="$(wd)hmms/4-triphones" \
+                --mfccdir="$(EV_train_mfcc)" \
+                --conf="$(eh)resources/htk-config" \
+                --tree-hed-tmpl="$(eh)resources/tree.hed.tt" \
+                --triphone-tree="$(EV_triphone_tree)" \
+                --iter="$(EV_iter4)" \
+                --mlf="$(wd)data/transcription/train/triphones.mlf"
 	
-	mkmktri.hed.pl < "$(wd)data/phones/monophones" > "$(wd)hmms/4-triphones/0-nontied/base/mktri.hed"
-	mktree.hed.pl "$(eh)resources/tree.hed.tt" "$(EV_triphone_tree)" "$(wd)data/phones/monophones" > "$(wd)hmms/4-triphones/1-tied/base/tree.hed"
-	
-	LANG=C H HHEd -A -D -T 1 -H "$(wd)hmms/3-aligned/macros" -H "$(wd)hmms/3-aligned/hmmdefs" -M "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/base/mktri.hed" "$(wd)data/phones/monophones"
-	hmmiter.pl --iter "$(EV_iter4)" --indir "$(wd)hmms/4-triphones/0-nontied/base" --outdir "$(wd)hmms/4-triphones/0-nontied/reestd" --workdir "$(wd)hmms/4-triphones/0-nontied/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/triphones.mlf" --phones "$(wd)data/phones/triphones"
-	H HERest -A -D -T 1 -C "$(eh)resources/htk-config" -I "$(wd)data/transcription/train/triphones.mlf" -t $(EV_HERest_t) -s "$(wd)hmms/4-triphones/stats" -S "$(wd)hmms/4-triphones/0-nontied/iterations/mfcc.scp" -H "$(wd)hmms/4-triphones/0-nontied/reestd/macros" -H "$(wd)hmms/4-triphones/0-nontied/reestd/hmmdefs" -M "$(wd)hmms/4-triphones/0-nontied" "$(wd)data/phones/triphones"
-	
-	LANG=C H HHEd -H "$(wd)hmms/4-triphones/0-nontied/macros" -H "$(wd)hmms/4-triphones/0-nontied/hmmdefs" -M "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/base/tree.hed" "$(wd)data/phones/triphones"
-	hmmiter.pl --iter "$(EV_iter4)" --indir "$(wd)hmms/4-triphones/1-tied/base" --outdir "$(wd)hmms/4-triphones" --workdir "$(wd)hmms/4-triphones/1-tied/iterations" --mfccdir "$(EV_train_mfcc)" --conf "$(eh)resources/htk-config" --mlf "$(wd)data/transcription/train/triphones.mlf" --phones "$(wd)data/phones/tiedlist"
-	
-	hmmeval.pl --hmmdir "$(wd)hmms/4-triphones" --workdir "$(wd)temp/test" --phones "$(wd)hmms/4-triphones/phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-triphonet" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
 
 EV_HVite_t?=250.0
 EV_iter3?=$(EV_iter)

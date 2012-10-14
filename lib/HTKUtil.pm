@@ -5,7 +5,7 @@ use utf8;
 use Carp;
 use Exporter qw/import/;
 use File::Basename qw(basename);
-use Evadevi::Util qw(run_parallel stringify_options);
+use Evadevi::Util qw(run_parallel stringify_options get_filehandle);
 
 our @EXPORT = qw(generate_scp mlf2scp hmmiter evaluate_hmm h);
 
@@ -367,22 +367,10 @@ sub init_hmm {
 }
 
 sub remove_empty_sentences_from_mlf {
-    my ($in_fn, $out_fn) = @_;
+    my ($in, $out) = @_;
     
-    my $in_fh;
-    if (ref($in_fn) =~ /\bIO\b/) {
-        $in_fh = $in_fn;
-    }
-    else {
-        open $in_fh,  '<:utf8', $in_fn  or die "Couldn't open '$in_fn': $!";
-    }
-    my $out_fh;
-    if (ref($out_fn) =~ /\bIO\b/) {
-        $out_fh = $out_fn;
-    }
-    else {
-        open $out_fh, '>:utf8', $out_fn or die "Couldn't open '$out_fn': $!";
-    }
+    my $in_fh  = get_filehandle($in);
+    my $out_fh = get_filehandle($out);
     
     my %phones_to_ignore = (
         sil => 1,

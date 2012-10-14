@@ -2,8 +2,9 @@ package Evadevi::Util;
 
 use strict;
 use utf8;
+use Carp;
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_parallel stringify_options);
+our @EXPORT_OK = qw(run_parallel stringify_options get_filehandle);
 
 sub run_parallel {
     my ($commands) = @_;
@@ -80,6 +81,17 @@ sub stringify_options {
         }
     }
     return(join ' ', @parts)
+}
+
+sub get_filehandle {
+    my ($f, $mode) = (@_, '<');
+    if (ref($f) =~ /\bIO\b/) {
+        return $f
+    }
+    else {
+        open my $fh, $mode, $f or croak "Couldn't open '$f' in mode '$mode': $!";
+        return $fh
+    }
 }
 
 1
