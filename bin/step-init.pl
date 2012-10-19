@@ -17,6 +17,7 @@ BEGIN { $PATH = sub { dirname( (caller)[1] ) }->() }
 use lib "$PATH/../lib";
 
 use HTKUtil;
+use HTKUtil::InitHmm;
 
 my $workdir;
 my %opt = (
@@ -34,7 +35,7 @@ GetOptions( \%opt, qw(
 ));
 
 print STDERR (' ' x 8 ), "initializing...\n";
-HTKUtil::init_hmm(
+HTKUtil::InitHmm::init_hmm(
     ( map {; $_ => $opt{$_} } qw(f conf phones mfccdir) ),
     workdir   => "$workdir/aux",
     hmm_proto => $opt{'init-proto'},

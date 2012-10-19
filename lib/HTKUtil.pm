@@ -89,13 +89,7 @@ sub mlf2scp {
         return $tmpl
     }
     
-    my $in_fh;
-    if (ref($in_file) !~ /GLOB|IO/ and -e $in_file) {
-        open $in_fh, '<', $in_file or die "Failed to open transcription file '$in_file': $!";
-    }
-    else {
-        $in_fh = $in_file;
-    }
+    my $in_fh = get_filehandle($in_file);
     
     while (<$in_fh>) {
         m{^"\*/(.*)\.lab"$} or next;
@@ -311,58 +305,6 @@ sub merge_mlfs {
             }
         }
         #warn "Sentence '$sent_stem' not found in @$mlf_fns";
-    }
-}
-
-sub init_hmm {
-	my (%opt) = @_;
-	my $f       = $opt{f}       // '0.01';
-	my $workdir = $opt{workdir} || '/tmp';
-	my $hmm_proto_fn  = $opt{hmm_proto} or die "Need hmm proto";
-	my $htk_config_fn = $opt{conf}      or die "Need htk conf";
-	my $monophones_fn = $opt{phones}    or die "Need monophones";
-	my $mfcc_dir      = $opt{mfccdir}   or die "Need mfcc dir";
-	my $outdir        = $opt{outdir}    or die "Need outdir";
-	my $mfcc_glob = "$mfcc_dir/*";
-	my $scp_fn = "$workdir/mfcc.scp";
-	
-	HTKUtil::generate_scp($scp_fn, $mfcc_glob);
-	
-	h(qq(HCompV -T 1 -A -D -C "$htk_config_fn" -f "$f" -m -S "$scp_fn" -M "$workdir" "$hmm_proto_fn"));
-	
-	makehmmdefs("$workdir/proto", "$workdir/vFloors", $monophones_fn, $outdir);
-	
-	link($monophones_fn, "$outdir/phones");
-    
-    sub makehmmdefs {
-        my ($proto_fn, $vFloors_fn, $monophones_fn, $outdir) = @_;
-        
-        open my $proto_fh,      '<', $proto_fn      or die "Couldn't open proto '$workdir/proto' for reading: $!";
-        open my $vFloors_fh,    '<', $vFloors_fn    or die "Couldn't open vFloors '$workdir/vFloors' for reading: $!";
-        open my $monophones_fh, '<', $monophones_fn or die "Couldn't open monophones: '$monophones_fn' for reading: $!";
-        
-        my @proto = <$proto_fh>;
-        my @monophones = <$monophones_fh>;
-        chomp @monophones;
-        
-        open my $macros_fh, '>', "$outdir/macros" or die "Couldn't open '$outdir/macros' for writing: $!";
-        print {$macros_fh} @proto[0 .. 2];
-        print {$macros_fh} <$vFloors_fh>;
-        close $macros_fh;
-        
-        open my $hmmdefs_fh, '>', "$outdir/hmmdefs" or die "Couldn't open '$outdir/hmmdefs' for writing: $!";
-        splice @proto, 0, 3;
-        my $proto = join('', @proto);
-        print {$hmmdefs_fh} "\n";
-        for my $monophone (@monophones) {
-            (my $hmmdef = $proto) =~ s/proto/$monophone/g;
-            print {$hmmdefs_fh} $hmmdef;
-        }
-        close $hmmdefs_fh;
-        
-        close $proto_fh;
-        close $vFloors_fh;
-        close $monophones_fh;
     }
 }
 

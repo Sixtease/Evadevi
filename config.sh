@@ -4,6 +4,10 @@ if [ -z "$EV_HERest_t" ]; then
     export EV_HERest_t='250.0 150.0 2000.0'
 fi
 
+if [ -z "$EV_HCompV_f" ]; then
+    export EV_HCompV_f='0.01'
+fi
+
 if [ -z "$EV_use_triphones" ]; then
     export model_to_add_mixtures_to="${EV_workdir}hmms/3-aligned"
     export mixture_opt='-m'

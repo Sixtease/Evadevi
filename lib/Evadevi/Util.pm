@@ -4,7 +4,7 @@ use strict;
 use utf8;
 use Carp;
 use Exporter qw(import);
-our @EXPORT_OK = qw(run_parallel stringify_options get_filehandle);
+our @EXPORT_OK = qw(run_parallel stringify_options get_filehandle cp);
 
 sub run_parallel {
     my ($commands) = @_;
@@ -85,13 +85,20 @@ sub stringify_options {
 
 sub get_filehandle {
     my ($f, $mode) = (@_, '<');
-    if (ref($f) =~ /\bIO\b/) {
+    if (ref($f) =~ /\b(?:IO|GLOB)\b/) {
         return $f
     }
     else {
         open my $fh, $mode, $f or croak "Couldn't open '$f' in mode '$mode': $!";
         return $fh
     }
+}
+
+sub cp {
+    my ($in_file, $out_file) = @_;
+    my $in_fh  = get_filehandle($in_file);
+    my $out_fh = get_filehandle($out_file, '>');
+    print {$out_fh} <$in_fh>;
 }
 
 1
