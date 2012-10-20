@@ -15,20 +15,19 @@ clean:
 	rm -R "$(wd)data" "$(wd)hmms" "$(wd)temp" "$(wd)log"
 
 model_to_add_mixtures_to?=$(wd)hmms/4-triphones
-mixture_phones=$(model_to_add_mixtures_to)/phones
 mixture_wordlist?=$(wd)data/wordlist/test-unk-triphonet
 mixture_transcription?=$(wd)data/transcription/train/triphones.mlf
-$(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(mixture_phones) $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
+$(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(model_to_add_mixtures_to)/phones $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
 	mkdir -p "$(wd)hmms/5-mixtures"
-	EV_HVite_s=5.0 EV_HVite_p=0.0 add-mixtures.pl -a $(mixture_opt)
-	cat "$(wd)hmms/5-mixtures/winner/hmmdefs" > "$(wd)hmms/5-mixtures/hmmdefs"
-	cat "$(wd)hmms/5-mixtures/winner/macros"  > "$(wd)hmms/5-mixtures/macros"
-	cp "$(mixture_phones)" "$(wd)hmms/5-mixtures/phones"
-	hmmeval.pl --hmmdir "$(wd)hmms/5-mixtures" --workdir "$(wd)temp/test" --phones "$(wd)hmms/5-mixtures/phones" --conf "$(eh)resources/htk-config" --wordlist "$(mixture_wordlist)" --LM "$(EV_LM)" --trans "$(wd)data/transcription/heldout.mlf" --mfccdir "$(EV_train_mfcc)"
+	step-mixtures.pl \
+                --indir="$(wd)hmms/4-triphones" \
+                --outdir="$(wd)hmms/5-mixtures" \
+                --mfccdir="$(EV_train_mfcc)" \
+                --conf="$(eh)resources/htk-config"
 
 EV_iter4?=$(EV_iter)
 EV_iter4?=5
-$(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
+$(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/iterations" "$(wd)hmms/4-triphones/0-nontied/reestd" "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/iterations"
 	step-triphones.pl \
                 --monophones="$(wd)data/phones/monophones" \
