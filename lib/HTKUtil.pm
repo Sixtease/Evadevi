@@ -255,6 +255,7 @@ sub evaluate_hmm {
     
     my $results_fn = h(stringify_options(
         ''   => 'HResults',
+        '-A' => '', '-D' => '', '-T' => 1,
         '-z' => '</s>',
         '-I' => $trans_fn,
         ''   => [$phones_fn, $recout_fn],
