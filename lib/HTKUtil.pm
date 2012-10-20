@@ -100,90 +100,89 @@ sub mlf2scp {
 }
 
 sub hmmiter {
-    my (%opt) = @_;
-    my $indir   = $opt{indir}  or die '"indir" - directory with starting HMMs not specified';
-    my $outdir  = $opt{outdir} or die '"outdir" - output directory not specified';
-    my $workdir = $opt{workdir} || '/tmp';
-    my $mfccdir = $opt{mfccdir} or die '"mfccdir" - directory with training parametrized audio files not specified';
-    my $iter    = $opt{iter} || 9;
-    my $config_fn        = $opt{conf} or die '"conf" - path to HTK config not specified';
-    my $transcription_fn = $opt{mlf}  or die '"mlf" - path to transcription file not specified';
-    my $phones_fn        = $opt{phones}   || "$indir/phones";
-    my $t            = $opt{t}            || $ENV{EV_HERest_t} or die '"t" param or "EV_HERest_t" must be set for hmmiter';
-    my $parallel_cnt = $opt{parallel_cnt} || $ENV{EV_HERest_p};
-    my $thread_cnt   = $opt{thread_cnt}   || $ENV{EV_thread_cnt} || 1;
+    my %opt = @_;
+    $opt{indir}  or die '"indir" - directory with starting HMMs not specified';
+    $opt{outdir} or die '"outdir" - output directory not specified';
+    $opt{workdir} ||= '/tmp';
+    $opt{mfccdir} or die '"mfccdir" - directory with training parametrized audio files not specified';
+    $opt{iter} || 9;
+    $opt{conf} or die '"conf" - path to HTK config not specified';
+    $opt{mlf}  or die '"mlf" - path to transcription file not specified';
+    $opt{phones}       ||= "$opt{indir}/phones";
+    $opt{t}            ||= $ENV{EV_HERest_t} or die '"t" param or "EV_HERest_t" must be set for hmmiter';
+    $opt{parallel_cnt} ||= $ENV{EV_HERest_p};
+    $opt{thread_cnt}   ||= $ENV{EV_thread_cnt} || 1;
     
-    my $scp_fn = "$workdir/mfcc.scp";
+    $opt{scp_fn} = "$opt{workdir}/mfcc.scp";
     {
-        open my $mlf_fh, '<', $transcription_fn or die "Couldn't open transcription file '$transcription_fn' for reading: $!";
-        mlf2scp($mlf_fh, $scp_fn, "$mfccdir/*.mfcc");
+        open my $mlf_fh, '<', $opt{mlf} or die "Couldn't open transcription file '$opt{mlf}' for reading: $!";
+        mlf2scp($mlf_fh, $opt{scp_fn}, "$opt{mfccdir}/*.mfcc");
     }
     
-    iterate(from => $indir, to => "$workdir/iter1");
+    iterate(from => $opt{indir}, to => "$opt{workdir}/iter1", %opt);
     my $i;
-    for my $_i (1 .. $iter-2) {
+    for my $_i (1 .. $opt{iter}-2) {
         $i = $_i;
         my $i1 = $i+1;
-        iterate(from => "$workdir/iter$i", to => "$workdir/iter$i1");
+        iterate(from => "$opt{workdir}/iter$i", to => "$opt{workdir}/iter$i1", %opt);
     }
     $i++;
-    iterate(from => "$workdir/iter$i", to => $outdir);
-    link($phones_fn, "$outdir/phones");
-    
-    sub iterate {
-        my %opt = @_;
-        my $from = $opt{from};
-        my $to = $opt{to};
-        mkdir $to;
-        local $ENV{LANG} = 'C';
-        my %herest_options = (
-            '-A' => '', '-D' => '', '-T' => 1,
-            '-C' => $config_fn,
-            '-I' => $transcription_fn,
-            '-t' => { val => $t, no_quotes => 1 },
-            '-S' => $scp_fn,
-            '-H' => ["$from/macros", "$from/hmmdefs"],
-            '-M' => $to,
-        );
-        if (not $parallel_cnt) {
-            h('HERest ' . stringify_options(%herest_options) . " $phones_fn");
-        }
-        else {
-            # run parallel
-            my $thread = 0;
-            my $split = 0;
-            my @scp_part_fns = split_scp($parallel_cnt, $scp_fn, $workdir);
-            my @batch;
-            while ($split < $parallel_cnt) {
-                $herest_options{'-p'} = $split + 1;
-                $herest_options{'-S'} = $scp_part_fns[$split];
-                push @batch, hsub('HERest ' . stringify_options(%herest_options) . " $phones_fn", exec => 1);
-                
-                $thread = ($thread+1) % $thread_cnt;
-                if ($thread == 0) {
-                    run_parallel(\@batch);
-                    @batch = ();
-                }
-            } continue {
-                $split++;
-            }
-            if (@batch) {
+    iterate(from => "$opt{workdir}/iter$i", to => $opt{outdir}, %opt);
+    link($opt{phones}, "$opt{outdir}/phones");
+}
+
+sub iterate {
+    my %opt = @_;
+    my $from = $opt{from};
+    my $to = $opt{to};
+    mkdir $to;
+    my %herest_options = (
+        '-A' => '', '-D' => '', '-T' => 1,
+        '-C' => $opt{conf},
+        '-I' => $opt{mlf},
+        '-t' => { val => $opt{t}, no_quotes => 1 },
+        '-S' => $opt{scp_fn},
+        '-H' => ["$from/macros", "$from/hmmdefs"],
+        '-M' => $to,
+    );
+    if (not $opt{parallel_cnt}) {
+        h('HERest ' . stringify_options(%herest_options) . " $opt{phones}", LANG => 'C');
+    }
+    else {
+        # run parallel
+        my $thread = 0;
+        my $split = 0;
+        my @scp_part_fns = split_scp($opt{parallel_cnt}, $opt{scp_fn}, $opt{workdir});
+        my @batch;
+        while ($split < $opt{parallel_cnt}) {
+            $herest_options{'-p'} = $split + 1;
+            $herest_options{'-S'} = $scp_part_fns[$split];
+            push @batch, hsub('HERest ' . stringify_options(%herest_options) . " $opt{phones}", exec => 1, LANG => 'C');
+            
+            $thread = ($thread+1) % $opt{thread_cnt};
+            if ($thread == 0) {
                 run_parallel(\@batch);
+                @batch = ();
             }
-            unlink @scp_part_fns;
-            
-            # synthesize
-            my @accumulators = glob "$to/HER*.acc";
-            my $accumulators_fn = "$workdir/accumulators.scp";
-            open my $accumulators_fh, '>', $accumulators_fn or die "Couldn't open '$accumulators_fn': $!";
-            print {$accumulators_fh} "$_\n" for @accumulators;
-            
-            $herest_options{'-p'} = 0;
-            $herest_options{'-S'} = $accumulators_fn;
-            
-            h('HERest ' . stringify_options(%herest_options) . " $phones_fn");
-            unlink @accumulators, $accumulators_fn;
+        } continue {
+            $split++;
         }
+        if (@batch) {
+            run_parallel(\@batch);
+        }
+        unlink @scp_part_fns;
+        
+        # synthesize
+        my @accumulators = glob "$to/HER*.acc";
+        my $accumulators_fn = "$opt{workdir}/accumulators.scp";
+        open my $accumulators_fh, '>', $accumulators_fn or die "Couldn't open '$accumulators_fn': $!";
+        print {$accumulators_fh} "$_\n" for @accumulators;
+        
+        $herest_options{'-p'} = 0;
+        $herest_options{'-S'} = $accumulators_fn;
+        
+        h('HERest ' . stringify_options(%herest_options) . " $opt{phones}", LANG => 'C');
+        unlink @accumulators, $accumulators_fn;
     }
 }
 
@@ -312,7 +311,7 @@ sub remove_empty_sentences_from_mlf {
     my ($in, $out) = @_;
     
     my $in_fh  = get_filehandle($in);
-    my $out_fh = get_filehandle($out);
+    my $out_fh = get_filehandle($out, '>');
     
     my %phones_to_ignore = (
         sil => 1,
