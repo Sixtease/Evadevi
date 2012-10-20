@@ -209,8 +209,8 @@ The C<t> option to HVite (pruning threshold).
 =item EV_iterN
 
 How many reestimations are performed after each step. C<EV_iter> controls all
-iterations, C<EV_iter1> controls the iterations after step 1 etc. All default
-to 2, except for C<EV_iter5> which defaults to 9 (9 reestimations after each
+iterations, C<EV_iter_init> controls the iterations after step 1-init etc. All default
+to 2, except for C<EV_iter_mixtures> which defaults to 9 (9 reestimations after each
 split).
 
 =item --heldout-ratio

@@ -17,7 +17,9 @@ use HTKUtil::MkMkTriHed;
 use HTKUtil::MkTreeHed;
 use Evadevi::Util qw(stringify_options);
 
-my %opt;
+my %opt = (
+    iter => $ENV{EV_iter_triphones} || $ENV{EV_iter} || 2,
+);
 
 GetOptions( \%opt, qw(
     monophones=s

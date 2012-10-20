@@ -22,6 +22,7 @@ use HTKUtil::InitHmm;
 my $workdir;
 my %opt = (
     workdir => \$workdir,
+    iter => $ENV{EV_iter_init} || $ENV{EV_iter} || 2,
 );
 
 GetOptions( \%opt, qw(

@@ -25,8 +25,6 @@ $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixture
                 --mfccdir="$(EV_train_mfcc)" \
                 --conf="$(eh)resources/htk-config"
 
-EV_iter4?=$(EV_iter)
-EV_iter4?=5
 $(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/iterations" "$(wd)hmms/4-triphones/0-nontied/reestd" "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/iterations"
 	step-triphones.pl \
@@ -39,13 +37,10 @@ $(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros $(wd)data/phones/tied
                 --conf="$(eh)resources/htk-config" \
                 --tree-hed-tmpl="$(eh)resources/tree.hed.tt" \
                 --triphone-tree="$(EV_triphone_tree)" \
-                --iter="$(EV_iter4)" \
                 --mlf="$(wd)data/transcription/train/triphones.mlf"
 	
 
 EV_HVite_t?=250.0
-EV_iter3?=$(EV_iter)
-EV_iter3?=2
 $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf: $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros $(wd)data/transcription/train/trans.mlf $(reest_prereq) $(wd)data/wordlist/train-sp-sil-phonet $(wd)data/phones/monophones
 	mkdir -p "$(wd)data/transcription/train" "$(wd)temp" "$(wd)hmms/3-aligned/iterations"
 	step-align.pl \
@@ -59,10 +54,7 @@ $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/t
                 --align-workdir="$(wd)temp" \
                 --align-wordlist="$(wd)data/wordlist/train-sp-sil-phonet" \
                 --phones="$(wd)data/phones/monophones" \
-                --iter="$(EV_iter3)"
 
-EV_iter2?=$(EV_iter)
-EV_iter2?=2
 $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic.mlf $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/2-sp/iterations" "$(wd)hmms/2-sp/base1-sp-added" "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(wd)temp/test"
 	cp "$(wd)hmms/1-init/macros" "$(wd)hmms/2-sp/base1-sp-added/"
@@ -70,13 +62,10 @@ $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms
                 --outdir="$(wd)hmms/2-sp" \
                 --indir="$(wd)hmms/1-init" \
                 --phones="$(wd)data/phones/monophones" \
-                --iter="$(EV_iter2)" \
                 --conf="$(eh)resources/htk-config" \
                 --mfccdir="$(EV_train_mfcc)" \
                 --train-mlf="$(wd)data/transcription/train/phonetic.mlf"
 
-EV_iter1?=$(EV_iter)
-EV_iter1?=2
 $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)data/phones/monophones-nosp $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-nosp-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/1-init/aux" "$(wd)hmms/1-init/iterations" "$(wd)hmms/1-init/base" "$(wd)temp/test"
 	step-init.pl \
@@ -85,7 +74,6 @@ $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)
                 --conf="$(eh)resources/htk-config" \
                 --phones="$(wd)data/phones/monophones-nosp" \
                 --mfccdir="$(EV_train_mfcc)" \
-                --iter="$(EV_iter1)" \
                 --train-mlf="$(wd)data/transcription/train/phonetic-nosp.mlf"
 
 $(wd)data/wordlist/test-unk-triphonet: $(wd)data/phones/triphones $(wd)data/wordlist/test-unk-phonet

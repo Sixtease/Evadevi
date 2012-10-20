@@ -18,7 +18,9 @@ use lib "$PATH/../lib";
 use HTKUtil;
 use Evadevi::Util qw(stringify_options);
 
-my %opt;
+my %opt = (
+    iter => $ENV{EV_iter_align} || $ENV{EV_iter} || 2,
+);
 
 GetOptions( \%opt, qw(
     indir=s

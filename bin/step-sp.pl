@@ -20,7 +20,9 @@ use Getopt::Long;
 my $eh = $ENV{EV_homedir};
 die "EV_homedir env var must be set" if not $eh;
 
-my %opt;
+my %opt = (
+    iter => $ENV{EV_iter_sp} || $ENV{EV_iter} || 2,
+);
 
 GetOptions( \%opt, qw(
     indir=s
