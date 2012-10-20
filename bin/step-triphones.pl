@@ -50,9 +50,7 @@ print STDERR (' ' x 8), "preparing...\n";
     
     my @hhed_options = (
         ''   => 'HHEd',
-        '-A' => '',
-        '-D' => '',
-        '-T' => 1,
+        '-A' => '', '-D' => '', '-T' => 1,
         '-H' => [ "$opt{indir}/macros", "$opt{indir}/hmmdefs" ],
         '-M' => "$opt{outdir}/0-nontied/base",
         ''   => [ "$opt{outdir}/0-nontied/base/mktri.hed", $opt{monophones} ],
@@ -72,9 +70,7 @@ print STDERR (' ' x 8), "training nontied...\n";
     
     my @herest_options = (
         ''   => 'HERest',
-        '-A' => '',
-        '-D' => '',
-        '-T' => 1,
+        '-A' => '', '-D' => '', '-T' => 1,
         '-C' => $opt{conf},
         '-I' => $opt{mlf},
         '-t' => {
@@ -83,7 +79,7 @@ print STDERR (' ' x 8), "training nontied...\n";
         },
         '-s' => "$opt{outdir}/stats",
         '-S' => "$opt{outdir}/0-nontied/iterations/mfcc.scp",
-        '-H' => [ "$opt{outdir}0-nontied/reestd/macros", "$opt{outdir}0-nontied/reestd/hmmdefs" ],
+        '-H' => [ "$opt{outdir}/0-nontied/reestd/macros", "$opt{outdir}/0-nontied/reestd/hmmdefs" ],
         '-M' => "$opt{outdir}/0-nontied",
         '' => $opt{triphones},
     );
@@ -94,6 +90,7 @@ print STDERR (' ' x 8 ), "tying...\n";
 {
     my @hhed_options = (
         ''   => 'HHEd',
+        '-A' => '', '-D' => '', '-T' => 1,
         '-H' => [ "$opt{outdir}/0-nontied/macros", "$opt{outdir}/0-nontied/hmmdefs" ],
         '-M' => "$opt{outdir}/1-tied/base",
         ''   => [ "$opt{outdir}/1-tied/base/tree.hed", $opt{triphones} ],

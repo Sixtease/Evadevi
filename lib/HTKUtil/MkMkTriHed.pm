@@ -20,7 +20,7 @@ sub expand {
 sub mkmktrihed {
     my ($in, $out, $triphones_fn) = @_;
     my $in_fh  = get_filehandle($in);
-    my $out_fh = get_filehandle($out);
+    my $out_fh = get_filehandle($out, '>');
 
     print {$out_fh} "CL $triphones_fn\n";
     while (<$in_fh>) {

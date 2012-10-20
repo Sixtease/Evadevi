@@ -49,7 +49,7 @@ print STDERR (' ' x 8), "aligning...\n";
         '-t' => $ENV{EV_HVite_t}, '-y' => 'lab',
         '-H' => ["$opt{indir}/macros", "$opt{indir}/hmmdefs"],
         '-S' => "$workdir/train-mfc.scp",
-        '-i' => "$workdir/trancription-aligned-with-empty.mlf",
+        '-i' => "$workdir/transcription-aligned-with-empty.mlf",
         '-I' => $opt{'train-mlf'},
     );
     my @hvite_arg = ($opt{'align-wordlist'}, $opt{phones});
@@ -59,8 +59,8 @@ print STDERR (' ' x 8), "aligning...\n";
     );
     
     HTKUtil::remove_empty_sentences_from_mlf(
-        "$workdir/trancription-aligned-with-empty.mlf",
-        "$workdir/trancription-aligned-without-empty.mlf",
+        "$workdir/transcription-aligned-with-empty.mlf",
+        "$workdir/transcription-aligned-without-empty.mlf",
     );
 
     my @hled_options = (
@@ -71,7 +71,7 @@ print STDERR (' ' x 8), "aligning...\n";
         '-l' => '*',
         '-i' => $opt{'out-mlf'},
         '' => "$ENV{EV_homedir}resources/squeeze-sil.led",
-        '' => "$workdir/trancription-aligned-without-empty.mlf",
+        '' => "$workdir/transcription-aligned-without-empty.mlf",
     );
     h(stringify_options(@hled_options));
 }
