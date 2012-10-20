@@ -14,6 +14,7 @@ sub h {
     die "EV_workdir env var must be set" if not $ENV{EV_workdir};
     
     my ($prg) = split /\s+/, $cmd, 2;
+    $prg =~ s/^["']|['"]$//g;
     
     my $log_dir = "$ENV{EV_workdir}log/htk";
     system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
@@ -27,6 +28,8 @@ sub h {
     }
     my $error = system $cmd;
     die "'$prg > $log_fn' failed with status $error" if $error;
+    
+    return $log_fn
 }
 sub hsub {
     my @args = @_;
@@ -250,14 +253,21 @@ sub evaluate_hmm {
     close $recout_fh;
     close $recout_raw_fh;
     
-    my $eval_command = qq(HResults -z '</s>' -I "$trans_fn" "$phones_fn" "$recout_fn");
-    open my $eval_command_fh, '-|', $eval_command or die "Couldn't start HResults: $!";
-    my $line;
+    my $results_fn = h(stringify_options(
+        ''   => 'HResults',
+        '-z' => '</s>',
+        '-I' => $trans_fn,
+        ''   => [$phones_fn, $recout_fn],
+    ), LANG => 'C', return_output  => 1);
+    my $line = '';
     my $raw = '';
-    while (<$eval_command_fh>) {
-        $raw .= $_;
-        if (/Overall Results/ .. /WORD:/) {
-            $line = $_;
+    {
+        local @ARGV = $results_fn;
+        while (<ARGV>) {
+            $raw .= $_;
+            if (/Overall Results/ .. /WORD:/) {
+                $line = $_;
+            }
         }
     }
     $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
