@@ -32,13 +32,13 @@ my $eh = $ENV{EV_homedir} || '';
 
 my $dont_use_triphones = 0;
 my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/triphones.mlf";
-my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/4-triphones";
+my $orig_starting_hmm     = my $starting_hmm     = "${wd}hmms/5-triphones";
 my $orig_wordlist_fn      = my $wordlist_fn      = "${wd}data/wordlist/test-unk-triphonet";
 my $phones_fn;
 my $lm_fn = $ENV{EV_LM};
 my $conf_fn = "${eh}resources/htk-config";
 my $heldout_transcription_fn = "${wd}data/transcription/heldout.mlf";
-my $outdir = "${wd}hmms/5-mixtures";
+my $outdir = "${wd}hmms/6-mixtures";
 my $train_dir = $ENV{EV_train_mfcc};
 my $heldout_dir = $ENV{EV_train_mfcc};
 my $reest_per_split = $ENV{EV_iter_mixtures} || $ENV{EV_iter} || 9;

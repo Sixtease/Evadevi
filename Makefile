@@ -3,9 +3,9 @@ wd=$(EV_workdir)
 reest_prereq=$(eh)resources/htk-config $(EV_train_mfcc)
 
 EV_outdir?=recognizer/
-train: $(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros $(wd)hmms/5-mixtures/phones
+train: $(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros $(wd)hmms/6-mixtures/phones
 	mkdir -p "$(EV_outdir)"
-	cp "$(eh)resources/htk-config" "$(wd)hmms/5-mixtures/hmmdefs" "$(wd)hmms/5-mixtures/macros" "$(wd)hmms/5-mixtures/phones" "$(EV_outdir)"
+	cp "$(eh)resources/htk-config" "$(wd)hmms/6-mixtures/hmmdefs" "$(wd)hmms/6-mixtures/macros" "$(wd)hmms/6-mixtures/phones" "$(EV_outdir)"
 
 test: $(EV_outdir)hmmdefs $(EV_outdir)macros $(EV_outdir)phones $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
 	mkdir -p "$(wd)temp/test"
@@ -14,31 +14,40 @@ test: $(EV_outdir)hmmdefs $(EV_outdir)macros $(EV_outdir)phones $(wd)data/wordli
 clean:
 	rm -R "$(wd)data" "$(wd)hmms" "$(wd)temp" "$(wd)log"
 
-model_to_add_mixtures_to?=$(wd)hmms/4-triphones
+model_to_add_mixtures_to?=$(wd)hmms/5-triphones
 mixture_wordlist?=$(wd)data/wordlist/test-unk-triphonet
 mixture_transcription?=$(wd)data/transcription/train/triphones.mlf
-$(wd)hmms/5-mixtures/hmmdefs $(wd)hmms/5-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(model_to_add_mixtures_to)/phones $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
-	mkdir -p "$(wd)hmms/5-mixtures"
+$(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(model_to_add_mixtures_to)/phones $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
+	mkdir -p "$(wd)hmms/6-mixtures"
 	step-mixtures.pl \
-                --indir="$(wd)hmms/4-triphones" \
-                --outdir="$(wd)hmms/5-mixtures" \
+                --indir="$(model_to_add_mixtures_to)" \
+                --outdir="$(wd)hmms/6-mixtures" \
                 --mfccdir="$(EV_train_mfcc)" \
                 --conf="$(eh)resources/htk-config"
 
-$(wd)hmms/4-triphones/hmmdefs $(wd)hmms/4-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
-	mkdir -p "$(wd)hmms/4-triphones/0-nontied/base" "$(wd)hmms/4-triphones/0-nontied/iterations" "$(wd)hmms/4-triphones/0-nontied/reestd" "$(wd)hmms/4-triphones/1-tied/base" "$(wd)hmms/4-triphones/1-tied/iterations"
+$(wd)hmms/5-triphones/hmmdefs $(wd)hmms/5-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/4-var/hmmdefs $(wd)hmms/4-var/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
+	mkdir -p "$(wd)hmms/5-triphones/0-nontied/base" "$(wd)hmms/5-triphones/0-nontied/iterations" "$(wd)hmms/5-triphones/0-nontied/reestd" "$(wd)hmms/5-triphones/1-tied/base" "$(wd)hmms/5-triphones/1-tied/iterations"
 	step-triphones.pl \
                 --monophones="$(wd)data/phones/monophones" \
                 --triphones="$(wd)data/phones/triphones" \
                 --tiedlist="$(wd)data/phones/tiedlist" \
-                --indir="$(wd)hmms/3-aligned" \
-                --outdir="$(wd)hmms/4-triphones" \
+                --indir="$(wd)hmms/4-var" \
+                --outdir="$(wd)hmms/5-triphones" \
                 --mfccdir="$(EV_train_mfcc)" \
                 --conf="$(eh)resources/htk-config" \
                 --tree-hed-tmpl="$(eh)resources/tree.hed.tt" \
                 --triphone-tree="$(EV_triphone_tree)" \
                 --mlf="$(wd)data/transcription/train/triphones.mlf"
-	
+
+$(wd)hmms/4-var/hmmdefs $(wd)hmms/4-var/macros: $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf
+	mkdir -p "$(wd)hmms/4-var/aux" "$(wd)hmms/4-var/iterations" "$(wd)hmms/4-var/base" "$(wd)hmms/4-var/var"
+	step-recalculate-variance.pl \
+                --conf="$(eh)resources/htk-config" \
+                --indir="$(wd)hmms/3-aligned" \
+                --outdir="$(wd)hmms/4-var" \
+                --mfccdir="$(EV_train_mfcc)" \
+                --mlf="$(wd)data/transcription/train/aligned.mlf" \
+                --proto="$(eh)resources/hmm/proto"
 
 EV_HVite_t?=250.0
 $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/train/aligned.mlf: $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros $(wd)data/transcription/train/trans.mlf $(reest_prereq) $(wd)data/wordlist/train-sp-sil-phonet $(wd)data/phones/monophones
