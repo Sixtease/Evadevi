@@ -42,7 +42,7 @@ calculate_variance(
     ''   => $opt{proto},
 );
 
-init_macros($opt{proto}, "$opt{outdir}/var/vFloors", "$opt{outdir}/base/macros");
+init_macros("$opt{outdir}/var/proto", "$opt{outdir}/var/vFloors", "$opt{outdir}/base/macros");
 cp("$opt{indir}/hmmdefs", "$opt{outdir}/base/hmmdefs");
 
 print STDERR (' ' x 8), "training...\n";
