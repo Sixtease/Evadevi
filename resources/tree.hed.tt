@@ -1,4 +1,4 @@
-RO 100 "[% EV_workdir %]hmms/5-triphones/stats"
+RO 100 "[% stats %]"
 
 TR 0
 
@@ -7,10 +7,10 @@ TR 0
 TR 2
 
 [%- DEFAULT tb='350' %]
-[%- FOREACH state IN ['2','3','4'] %][% FOREACH phone IN phones %]
+[%- FOREACH state IN ['2','3','4'] %][% FOREACH phone IN monophones %]
 TB [% tb %] "ST_[% phone %]_[% state %]_"  {("[% phone %]","*-[% phone %]+*","[% phone %]+*","*-[% phone %]").state[[% state %]]}
 [%- END %][% END %]
 
 TR 1
 
-CO "[% EV_workdir %]data/phones/tiedlist"
+CO "[% tiedlist %]"

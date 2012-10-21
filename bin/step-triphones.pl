@@ -44,10 +44,12 @@ print STDERR (' ' x 8), "preparing...\n";
     );
     
     mktreehed(
-        $opt{'tree-hed-tmpl'},
-        $opt{'triphone-tree'},
-        $opt{monophones},
-        "$opt{outdir}/1-tied/base/tree.hed",
+        tmpl_fn    => $opt{'tree-hed-tmpl'},
+        qs         => $opt{'triphone-tree'},
+        monophones => $opt{monophones},
+        tiedlist   => "$opt{tiedlist}",
+        stats_fn   => "$opt{outdir}/stats",
+        out        => "$opt{outdir}/1-tied/base/tree.hed",
     );
     
     my @hhed_options = (

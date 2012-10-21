@@ -11,8 +11,6 @@ use lib "$PATH/../lib";
 
 use HTKUtil::MkTreeHed;
 
-if (@ARGV != 3) {
-    die "usage: $0 resources/tree.hed.tt tree_QS data/phones/monophones\n"
-}
+# FIXME: delete or add GetOptions!
 
 mktreehed(@ARGV);
