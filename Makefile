@@ -23,6 +23,7 @@ $(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros: $(model_to_add_mixture
                 --indir="$(model_to_add_mixtures_to)" \
                 --outdir="$(wd)hmms/6-mixtures" \
                 --mfccdir="$(EV_train_mfcc)" \
+                --wordlist="$(wd)data/wordlist/test-unk-triphonet" \
                 --conf="$(eh)resources/htk-config"
 
 $(wd)hmms/5-triphones/hmmdefs $(wd)hmms/5-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/4-var/hmmdefs $(wd)hmms/4-var/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)

@@ -20,6 +20,7 @@ GetOptions(\%opt, qw(
     outdir=s
     conf=s
     mfccdir=s
+    wordlist=s
 ));
 
 my @mixture_opt = shellwords($ENV{mixture_opt});
@@ -41,12 +42,11 @@ cp("$opt{indir}/phones",          "$opt{outdir}/phones" );
 print STDERR (' ' x 8 ), "evaluating...\n";
 {
     my $score = HTKUtil::evaluate_hmm(
-        ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
+        ( map {; $_ => $opt{$_} } qw(conf mfccdir wordlist) ),
         hmmdir        => $opt{outdir},
         workdir       => $ENV{EV_eval_workdir},
         transcription => $ENV{EV_heldout_mlf},
         LM            => $ENV{EV_LM},
-        wordlist      => $ENV{EV_default_wordlist},
     );
     print "$score->{raw}\n$score\n";
 }
