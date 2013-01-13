@@ -272,6 +272,17 @@ sub evaluate_hmm {
         }
     }
     $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
+    
+    # save score next to hmmdefs
+    my $opened = open my $score_fh, '>', "$hmmdir/score";
+    if ($opened) {
+        print {$score_fh} $raw;
+        close $opened;
+    }
+    else {
+        warn "Couldn't save score to '$hmmdir/score'";
+    }
+    
     return Score->new($1, $raw);
 }
 
