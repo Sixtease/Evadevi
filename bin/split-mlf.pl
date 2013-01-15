@@ -31,6 +31,8 @@ if (not @targets) {
     die "Usage: $0 train.mlf=9 heldout.mlf=1 all.mlf\n"
 }
 
+my @had_newline = map 0, @targets;
+
 @ARGV = @argv;
 
 $/ = qq{\n"};
@@ -41,6 +43,9 @@ while (<>) {
     chomp;
     next SENTENCE if /#!MLF!#/;
     print {$targets[$i]} qq{\n"$_};
+    $had_newline[$i] = (substr($_, -1) eq '\n');
     $i++;
     $i %= @targets;
 }
+
+print {$_} "\n" for map $targets[$_], grep !$had_newline[$_], 0 .. $#targets;
