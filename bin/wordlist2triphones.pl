@@ -13,7 +13,7 @@ while (<>) {
     chomp;
     my ($word, $phone1, @phones) = split /\s+/;
     my $tail;
-    $tail = pop @phones if {sp=>1,sil=>1}->{$phones[-1]};
+    $tail = pop @phones if {sil=>1}->{$phones[-1]};
     my @buffer = ('', '', $phone1);
     for (@phones, '') {
         shift @buffer;

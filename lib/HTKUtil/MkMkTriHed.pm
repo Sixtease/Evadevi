@@ -25,7 +25,7 @@ sub mkmktrihed {
     print {$out_fh} "CL $triphones_fn\n";
     while (<$in_fh>) {
         chomp;
-        next if $_ eq 'sil' or $_ eq 'sp';
+        next if $_ eq 'sil';
         print {$out_fh} expand($_), "\n";
     }
 }

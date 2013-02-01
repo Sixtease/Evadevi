@@ -25,7 +25,7 @@ if [ -x hmmiter.pl ]; then : ; else
 fi
 
 if [ -z "$EV_default_wordlist" ]; then
-    export EV_default_wordlist="${EV_workdir}data/wordlist/test-unk-nosp-phonet"
+    export EV_default_wordlist="${EV_workdir}data/wordlist/test-unk-phonet"
 fi
 if [ -z "$EV_heldout_mlf" ]; then
     export EV_heldout_mlf="${EV_workdir}data/transcription/heldout.mlf"

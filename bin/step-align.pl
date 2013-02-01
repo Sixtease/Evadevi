@@ -17,6 +17,7 @@ use lib "$PATH/../lib";
 
 use HTKUtil;
 use Evadevi::Util qw(stringify_options);
+use JulLib qw(evaluate_hmm);
 
 my %opt = (
     iter => $ENV{EV_iter_align} || $ENV{EV_iter} || 2,
@@ -87,12 +88,13 @@ hmmiter(
 
 print STDERR (' ' x 8 ), "evaluating...\n";
 {
-    my $score = HTKUtil::evaluate_hmm(
+    my $score = evaluate_hmm(
         ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
         hmmdir        => $opt{outdir},
         workdir       => $ENV{EV_eval_workdir},
         transcription => $ENV{EV_heldout_mlf},
-        LM            => $ENV{EV_LM},
+        LMf           => $ENV{EV_LMf},
+        LMb           => $ENV{EV_LMb},
         wordlist      => $ENV{EV_default_wordlist},
     );
     print "$score->{raw}\n$score\n";

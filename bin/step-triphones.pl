@@ -16,6 +16,7 @@ use HTKUtil;
 use HTKUtil::MkMkTriHed;
 use HTKUtil::MkTreeHed;
 use Evadevi::Util qw(stringify_options);
+use JulLib qw(evaluate_hmm);
 
 my %opt = (
     iter => $ENV{EV_iter_triphones} || $ENV{EV_iter} || 2,
@@ -25,6 +26,7 @@ GetOptions( \%opt, qw(
     monophones=s
     triphones=s
     tiedlist=s
+    fulllist=s
     indir=s
     outdir=s
     mfccdir=s
@@ -47,7 +49,8 @@ print STDERR (' ' x 8), "preparing...\n";
         tmpl_fn    => $opt{'tree-hed-tmpl'},
         qs         => $opt{'triphone-tree'},
         monophones => $opt{monophones},
-        tiedlist   => "$opt{tiedlist}",
+        tiedlist   => $opt{tiedlist},
+        fulllist   => $opt{fulllist},
         stats_fn   => "$opt{outdir}/stats",
         out        => "$opt{outdir}/1-tied/base/tree.hed",
     );
@@ -115,12 +118,13 @@ print STDERR (' ' x 8 ), "training tied...\n";
 
 print STDERR (' ' x 8 ), "evaluating...\n";
 {
-    my $score = HTKUtil::evaluate_hmm(
+    my $score = evaluate_hmm(
         ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
         hmmdir        => $opt{outdir},
         workdir       => $ENV{EV_eval_workdir},
         transcription => $ENV{EV_heldout_mlf},
-        LM            => $ENV{EV_LM},
+        LMf           => $ENV{EV_LMf},
+        LMb           => $ENV{EV_LMb},
         wordlist      => $ENV{EV_default_wordlist},
     );
     print "$score->{raw}\n$score\n";

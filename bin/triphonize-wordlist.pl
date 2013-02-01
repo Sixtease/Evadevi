@@ -22,7 +22,7 @@ while (<>) {
     chomp;
     my ($word, $phone1, @phones) = split /\s+/;
     print $word, '      ';
-    my @buffer = ('', 'sp', $phone1);
+    my @buffer = ('', 'sil', $phone1);
     for (@phones, '') {
         print ' ';
         shift @buffer;

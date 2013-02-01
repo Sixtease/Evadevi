@@ -45,7 +45,7 @@ sub stringify_options {
         my $o = $_[$i];
         my $vs = $_[$i+1];
         
-        warn "option not starting with dash: '$o' in '@_'" if substr($o,0,1) ne '-' and length $o > 0;
+        warn "option not starting with dash: '$o' in '@_'" if substr($o,0,1) ne '-' and length $o > 0 and $o !~ /^\d?>$/;
         
         if (ref $vs ne 'ARRAY') {
             $vs = [$vs];
