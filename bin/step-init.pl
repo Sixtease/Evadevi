@@ -61,6 +61,6 @@ my $score = evaluate_hmm(
     transcription => $ENV{EV_heldout_mlf},
     LMf           => $ENV{EV_LMf},
     LMb           => $ENV{EV_LMb},
-    wordlist      => "$ENV{EV_workdir}/test-unk-nosp-phonet",
+    wordlist      => "$ENV{EV_workdir}data/wordlist/test-unk-nosp-phonet",
 );
 print "$score->{raw}\n$score\n";
