@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+package JulLib;
 
 use strict;
 use utf8;
