@@ -51,11 +51,11 @@ if ($ENV{EV_phones_count_file}) {
 }
 
 # Delete context-based sp's
-for my $ngram (keys %phones) {
-    if ($ngram =~ /-sp\b|\bsp\+/) {
-        delete $phones{$ngram};
-    }
-}
+#for my $ngram (keys %phones) {
+#    if ($ngram =~ /-sp\b|\bsp\+/) {
+#        delete $phones{$ngram};
+#    }
+#}
 
 # Subtract biphoneme counts for corresponding surviving triphonemes.
 # Thing is we don't want to keep a biphoneme if containing triphonemes

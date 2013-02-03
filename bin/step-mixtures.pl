@@ -13,6 +13,7 @@ use lib "$PATH/../lib";
 
 use HTKUtil::AddMixtures;
 use Evadevi::Util qw(cp);
+use JulLib qw(evaluate_hmm);
 
 my %opt;
 GetOptions(\%opt, qw(
@@ -41,12 +42,13 @@ cp("$opt{indir}/phones",          "$opt{outdir}/phones" );
 
 print STDERR (' ' x 8 ), "evaluating...\n";
 {
-    my $score = HTKUtil::evaluate_hmm(
+    my $score = JulLib::evaluate_hmm(
         ( map {; $_ => $opt{$_} } qw(conf mfccdir wordlist) ),
         hmmdir        => $opt{outdir},
         workdir       => $ENV{EV_eval_workdir},
         transcription => $ENV{EV_heldout_mlf},
-        LM            => $ENV{EV_LM},
+        LMf           => $ENV{EV_LMf},
+        LMb           => $ENV{EV_LMb},
     );
     print "$score->{raw}\n$score\n";
 }

@@ -8,6 +8,7 @@ my $PATH;
 BEGIN { $PATH = sub { dirname( (caller)[1] ) }->() }
 use lib "$PATH/../lib";
 use HTKUtil;
+use JulLib qw(evaluate_hmm);
 use Getopt::Long;
 
 my $print_brief = 0;
@@ -20,7 +21,8 @@ GetOptions(\%options, qw(
     workdir=s
     mfccdir=s
     conf=s
-    LM=s
+    LMf=s
+    LMb=s
     wordlist=s
     phones=s
     transcription=s

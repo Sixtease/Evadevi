@@ -16,6 +16,7 @@ use lib "$PATH/../lib";
 
 use HTKUtil;
 use Getopt::Long;
+use JulLib qw(evaluate_hmm);
 
 my $eh = $ENV{EV_homedir};
 die "EV_homedir env var must be set" if not $eh;
@@ -81,12 +82,13 @@ GetOptions( \%opt, qw(
 {
     print STDERR (' ' x 8 ), "evaluating...\n";
     
-    my $score = HTKUtil::evaluate_hmm(
+    my $score = evaluate_hmm(
         ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
         hmmdir        => $opt{outdir},
         workdir       => $ENV{EV_eval_workdir},
         transcription => $ENV{EV_heldout_mlf},
-        LM            => $ENV{EV_LM},
+        LMf           => $ENV{EV_LMf},
+        LMb           => $ENV{EV_LMb},
         wordlist      => $ENV{EV_default_wordlist},
     );
     print "$score->{raw}\n$score\n";

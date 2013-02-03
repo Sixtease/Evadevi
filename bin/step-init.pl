@@ -18,6 +18,7 @@ use lib "$PATH/../lib";
 
 use HTKUtil;
 use HTKUtil::InitHmm;
+use JulLib qw(evaluate_hmm);
 
 my $workdir;
 my %opt = (
@@ -53,12 +54,13 @@ HTKUtil::hmmiter(
 );
 
 print STDERR (' ' x 8 ), "evaluating...\n";
-my $score = HTKUtil::evaluate_hmm(
+my $score = evaluate_hmm(
     ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
     hmmdir        => $workdir,
     workdir       => $ENV{EV_eval_workdir},
     transcription => $ENV{EV_heldout_mlf},
-    LM            => $ENV{EV_LM},
-    wordlist      => $ENV{EV_default_wordlist},
+    LMf           => $ENV{EV_LMf},
+    LMb           => $ENV{EV_LMb},
+    wordlist      => "$ENV{EV_workdir}data/wordlist/test-unk-nosp-phonet",
 );
 print "$score->{raw}\n$score\n";

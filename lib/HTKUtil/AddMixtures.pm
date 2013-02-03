@@ -21,6 +21,7 @@ use utf8;
 use Getopt::Long qw(GetOptionsFromArray GetOptionsFromString);
 use File::Basename;
 use HTKUtil;
+use JulLib qw(evaluate_hmm);
 use File::RelativeSymlink qw(mksymlink);
 
 my $wd = $ENV{EV_workdir} || '';
@@ -28,10 +29,11 @@ my $eh = $ENV{EV_homedir} || '';
 
 my $dont_use_triphones = 0;
 my $orig_transcription_fn = my $transcription_fn = "${wd}data/transcription/train/triphones.mlf";
-my $orig_wordlist_fn      = my $wordlist_fn      = "${wd}data/wordlist/test-unk-triphonet";
+my $wordlist_fn = "${wd}data/wordlist/test-unk-phonet";
 my $starting_hmm;
 my $phones_fn;
-my $lm_fn = $ENV{EV_LM};
+my $lmf_fn = $ENV{EV_LMf};
+my $lmb_fn = $ENV{EV_LMb};
 my $conf_fn = "${eh}resources/htk-config";
 my $heldout_transcription_fn = "${wd}data/transcription/heldout.mlf";
 my $outdir;
@@ -54,7 +56,8 @@ sub init {
         'heldout-trans=s'   => \$heldout_transcription_fn,
         'phones=s'          => \$phones_fn,
         'starthmm=s'        => \$starting_hmm,
-        'lm=s'              => \$lm_fn,
+        'lmf=s'             => \$lmf_fn,
+        'lmb=s'             => \$lmb_fn,
         'outdir=s'          => \$outdir,
         'train-dir=s'       => \$train_dir,
         'heldout-dir=s'     => \$heldout_dir,
@@ -76,7 +79,6 @@ sub init {
     
     if ($dont_use_triphones) {
         $transcription_fn = "${wd}data/transcription/train/aligned.mlf" if $transcription_fn eq $orig_transcription_fn;
-        $wordlist_fn      = "${wd}data/wordlist/test-unk-phonet"        if $wordlist_fn      eq $orig_wordlist_fn;
     }
     $phones_fn = "$starting_hmm/phones" if not defined $phones_fn;
     
@@ -111,7 +113,8 @@ sub split_mixtures {
             workdir => $outdir,
             mfccdir => $heldout_dir,
             conf => $conf_fn,
-            LM => $lm_fn,
+            LMf => $lmf_fn,
+            LMb => $lmb_fn,
             wordlist => $wordlist_fn,
             phones => $phones_fn,
             transcription => $heldout_transcription_fn,
@@ -132,7 +135,8 @@ sub split_all {
         workdir => $outdir,
         mfccdir => $heldout_dir,
         conf => $conf_fn,
-        LM => $lm_fn,
+        LMf => $lmf_fn,
+        LMb => $lmb_fn,
         wordlist => $wordlist_fn,
         phones => $phones_fn,
         transcription => $heldout_transcription_fn,
@@ -179,7 +183,8 @@ sub find_best_splits {
         workdir => $outdir,
         mfccdir => $heldout_dir,
         conf => $conf_fn,
-        LM => $lm_fn,
+        LMf => $lmf_fn,
+        LMb => $lmb_fn,
         wordlist => $wordlist_fn,
         phones => $phones_fn,
         transcription => $heldout_transcription_fn,

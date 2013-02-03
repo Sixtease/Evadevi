@@ -7,15 +7,15 @@ train: $(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros $(wd)hmms/6-mixt
 	mkdir -p "$(EV_outdir)"
 	cp "$(eh)resources/htk-config" "$(wd)hmms/6-mixtures/hmmdefs" "$(wd)hmms/6-mixtures/macros" "$(wd)hmms/6-mixtures/phones" "$(EV_outdir)"
 
-test: $(EV_outdir)hmmdefs $(EV_outdir)macros $(EV_outdir)phones $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(EV_test_transcription) $(EV_test_mfcc)
+test: $(EV_outdir)hmmdefs $(EV_outdir)macros $(EV_outdir)phones $(wd)data/wordlist/test-unk-phonet $(EV_test_transcription) $(EV_test_mfcc)
 	mkdir -p "$(wd)temp/test"
-	hmmeval.pl --hmmdir "$(EV_outdir)" --workdir "$(wd)temp/test" --phones "$(EV_outdir)phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LM "$(EV_LM)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)" -t '100.0'
+	hmmeval.pl --hmmdir "$(EV_outdir)" --workdir "$(wd)temp/test" --phones "$(EV_outdir)phones" --conf "$(eh)resources/htk-config" --wordlist "$(wd)data/wordlist/test-unk-phonet" --LMf "$(EV_LMf)" --LMb "$(EV_LMb)" --trans "$(EV_test_transcription)" --mfccdir "$(EV_test_mfcc)" -t '100.0'
 
 clean:
 	rm -R "$(wd)data" "$(wd)hmms" "$(wd)temp" "$(wd)log"
 
 model_to_add_mixtures_to?=$(wd)hmms/5-triphones
-mixture_wordlist?=$(wd)data/wordlist/test-unk-triphonet
+mixture_wordlist?=$(wd)data/wordlist/test-unk-phonet
 mixture_transcription?=$(wd)data/transcription/train/triphones.mlf
 $(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros: $(model_to_add_mixtures_to)/hmmdefs $(model_to_add_mixtures_to)/macros $(model_to_add_mixtures_to)/phones $(reest_prereq) $(mixture_wordlist) $(mixture_transcription) $(wd)data/phones/monophones
 	mkdir -p "$(wd)hmms/6-mixtures"
@@ -23,15 +23,16 @@ $(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros: $(model_to_add_mixture
                 --indir="$(model_to_add_mixtures_to)" \
                 --outdir="$(wd)hmms/6-mixtures" \
                 --mfccdir="$(EV_train_mfcc)" \
-                --wordlist="$(wd)data/wordlist/test-unk-triphonet" \
+                --wordlist="$(wd)data/wordlist/test-unk-phonet" \
                 --conf="$(eh)resources/htk-config"
 
-$(wd)hmms/5-triphones/hmmdefs $(wd)hmms/5-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/4-var/hmmdefs $(wd)hmms/4-var/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(EV_triphone_tree) $(wd)data/wordlist/test-unk-triphonet $(EV_wordlist_train_phonet)
+$(wd)hmms/5-triphones/hmmdefs $(wd)hmms/5-triphones/macros $(wd)data/phones/tiedlist: $(wd)hmms/4-var/hmmdefs $(wd)hmms/4-var/macros $(wd)data/transcription/train/triphones.mlf $(wd)data/phones/monophones $(wd)data/phones/triphones $(wd)data/phones/fulllist $(EV_triphone_tree) $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)hmms/5-triphones/0-nontied/base" "$(wd)hmms/5-triphones/0-nontied/iterations" "$(wd)hmms/5-triphones/0-nontied/reestd" "$(wd)hmms/5-triphones/1-tied/base" "$(wd)hmms/5-triphones/1-tied/iterations"
 	step-triphones.pl \
                 --monophones="$(wd)data/phones/monophones" \
                 --triphones="$(wd)data/phones/triphones" \
                 --tiedlist="$(wd)data/phones/tiedlist" \
+                --fulllist="$(wd)data/phones/fulllist" \
                 --indir="$(wd)hmms/4-var" \
                 --outdir="$(wd)hmms/5-triphones" \
                 --mfccdir="$(EV_train_mfcc)" \
@@ -65,7 +66,7 @@ $(wd)hmms/3-aligned/hmmdefs $(wd)hmms/3-aligned/macros $(wd)data/transcription/t
                 --align-wordlist="$(wd)data/wordlist/train-sp-sil-phonet" \
                 --phones="$(wd)data/phones/monophones" \
 
-$(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic.mlf $(wd)data/wordlist/test-unk-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
+$(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros $(eh)resources/sil.hed $(wd)data/phones/monophones $(reest_prereq) $(wd)data/transcription/train/phonetic.mlf $(wd)data/wordlist/test-unk-phonet $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/2-sp/iterations" "$(wd)hmms/2-sp/base1-sp-added" "$(wd)hmms/2-sp/base2-sp-sil-tied" "$(wd)temp/test"
 	cp "$(wd)hmms/1-init/macros" "$(wd)hmms/2-sp/base1-sp-added/"
 	step-sp.pl \
@@ -76,7 +77,7 @@ $(wd)hmms/2-sp/hmmdefs $(wd)hmms/2-sp/macros: $(wd)hmms/1-init/hmmdefs $(wd)hmms
                 --mfccdir="$(EV_train_mfcc)" \
                 --train-mlf="$(wd)data/transcription/train/phonetic.mlf"
 
-$(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)data/phones/monophones-nosp $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-nosp-phonet $(EV_LM) $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
+$(wd)hmms/1-init/hmmdefs $(wd)hmms/1-init/macros: $(eh)resources/hmm/proto $(wd)data/phones/monophones-nosp $(reest_prereq) $(wd)data/transcription/train/phonetic-nosp.mlf $(wd)data/wordlist/test-unk-nosp-phonet $(wd)data/transcription/heldout.mlf $(EV_train_mfcc)
 	mkdir -p "$(wd)hmms/1-init/aux" "$(wd)hmms/1-init/iterations" "$(wd)hmms/1-init/base" "$(wd)temp/test"
 	step-init.pl \
                 --workdir="$(wd)hmms/1-init" \
@@ -110,6 +111,9 @@ $(wd)data/wordlist/train-sil-phonet: $(EV_wordlist_train_phonet)
 	echo 'silence sil' > "$(wd)data/wordlist/train-sil-phonet"
 	cat < "$(EV_wordlist_train_phonet)" >> "$(wd)data/wordlist/train-sil-phonet"
 
+$(wd)data/phones/fulllist: $(EV_wordlist_test_phonet) $(wd)data/phones/triphones
+	wordlist2triphones.pl "$(EV_wordlist_test_phonet)" | cat - "$(wd)data/phones/triphones" | sort -u > "$(wd)data/phones/fulllist"
+
 $(wd)data/phones/triphones: $(wd)data/transcription/train/aligned.mlf
 	mkdir -p "$(wd)data/phones"
 	count-triphones.pl < "$(wd)data/transcription/train/aligned.mlf" > "$(wd)data/phones/triphones"
@@ -118,7 +122,7 @@ $(wd)data/phones/monophones-nosp: $(wd)data/phones/monophones
 	mkdir -p "$(wd)data/phones"
 	grep -wv 'sp' < "$(wd)data/phones/monophones" > "$(wd)data/phones/monophones-nosp"
 
-$(wd)data/phones/monophones: $(EV_wordlist_train_phonet)
+$(wd)data/phones/monophones: $(EV_wordlist_train_phonet) $(EV_wordlist_test_phones)
 	mkdir -p "$(wd)data/phones"
 	wordlist2phones.pl "$(EV_wordlist_train_phonet)" "$(EV_wordlist_test_phonet)" > "$(wd)data/phones/monophones"
 

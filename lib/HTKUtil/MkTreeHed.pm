@@ -38,6 +38,7 @@ sub mktreehed {
         qs         => $opt{qs},
         monophones => \@monophones,
         tiedlist   => $opt{tiedlist},
+        fulllist   => $opt{fulllist},
         stats      => $opt{stats_fn},
     }, $opt{out}) or die $tt->error;
 }
