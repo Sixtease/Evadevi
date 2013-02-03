@@ -54,13 +54,16 @@ HTKUtil::hmmiter(
 );
 
 print STDERR (' ' x 8 ), "evaluating...\n";
-my $score = evaluate_hmm(
-    ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
-    hmmdir        => $workdir,
-    workdir       => $ENV{EV_eval_workdir},
-    transcription => $ENV{EV_heldout_mlf},
-    LMf           => $ENV{EV_LMf},
-    LMb           => $ENV{EV_LMb},
-    wordlist      => "$ENV{EV_workdir}data/wordlist/test-unk-nosp-phonet",
-);
-print "$score->{raw}\n$score\n";
+{
+    ;;; last;
+    my $score = evaluate_hmm(
+        ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
+        hmmdir        => $workdir,
+        workdir       => $ENV{EV_eval_workdir},
+        transcription => $ENV{EV_heldout_mlf},
+        LMf           => $ENV{EV_LMf},
+        LMb           => $ENV{EV_LMb},
+        wordlist      => "$ENV{EV_workdir}data/wordlist/test-unk-nosp-phonet",
+    );
+    print "$score->{raw}\n$score\n";
+}
