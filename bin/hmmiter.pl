@@ -18,7 +18,7 @@ GetOptions(\%opt, qw(
     indir=s outdir=s workdir=s mfccdir=s
     iter=i
     conf=s mlf=s phones=s
-    t=s
+    t=s w=f
 ));
 
 hmmiter(%opt);

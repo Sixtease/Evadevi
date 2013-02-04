@@ -148,6 +148,7 @@ sub iterate {
         '-H' => ["$from/macros", "$from/hmmdefs"],
         '-M' => $to,
     );
+    $herest_options{'-w'} = $opt{w} if defined $opt{w};
     if (not $opt{parallel_cnt}) {
         h('HERest ' . stringify_options(%herest_options) . " $opt{phones}", LANG => 'C');
     }
