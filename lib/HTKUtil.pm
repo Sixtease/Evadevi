@@ -353,6 +353,47 @@ sub remove_empty_sentences_from_mlf {
     }
 }
 
+sub add_phones {
+    my %opt = @_;
+    my $from = $opt{from} or die "None from what to add phones";
+    my $to   = $opt{to}   or die "None to what to add phones";
+    my %phones;
+    {
+        local @ARGV = ($to);
+        while (<>) {
+            chomp;
+            my @phones = split /\s+/;
+            $phones{$_} = $phones[-1] for @phones;
+        }
+    }
+    open my $fh, '>>', $to or die "Cannot open '$to' for appending: $!";
+    {
+        local @ARGV = ($from);
+        while (<>) {
+            chomp;
+            next if exists $phones{$_};
+            my ($l, $p, $r) = "-$_+" =~ /(\w*)-(\w+)\+(\w*)/ or die "misformatted phone: $_";
+            my $m;
+            if ($phones{"$l-$p+$r"}) {
+                # triphone doch da
+            }
+            elsif ($m = $phones{"$l-$p"}) {
+                print {$fh} "$_ $m\n";
+            }
+            elsif ($m = $phones{"$p+$r"}) {
+                print {$fh} "$_ $m\n";
+            }
+            elsif ($m = $phones{$p}) {
+                print {$fh} "$_ $m\n";
+            }
+            else {
+                die "Couldn't find phone '$_'";
+            }
+        }
+    }
+    close $fh;
+}
+
 package Score;
 use overload (
     '""' => sub {
