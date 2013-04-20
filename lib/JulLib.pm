@@ -20,10 +20,17 @@ sub evaluate_hmm {
     my $phones_fn = $opt{phones} || "$hmmdir/phones";
     my $align = $opt{align} || '-walign';
     my $unk = $opt{unk} || '!!UNK';
+    my $segment_input = $opt{segment_input};    # probably to delete
     
     my $hmm_fn;
     if (-e "$hmmdir/hmmmodel") {
         $hmm_fn = "$hmmdir/hmmmodel";
+        if ((stat $hmm_fn)[9] < (stat "$hmmdir/hmmdefs")[9]) {
+            my $err = system(qq(cat "$hmmdir/macros" "$hmmdir/hmmdefs" > $hmm_fn));
+            if ($err) {
+                die "$hmm_fn outdated by $hmmdir/hmmdefs and failed to regenerate (status $err): $!"
+            }
+        }
     }
     else {
         $hmm_fn = "$workdir/hmmmodel";
@@ -44,6 +51,11 @@ sub evaluate_hmm {
         -hlist => "$phones_fn",
         -mapunk => $unk,
         $align => '',
+        -lmp2 => {
+            no_quotes => 1,
+            val => '8.0 -4.0',
+        },
+        -fallback1pass => '',
     });
     
     my $mlf_out_fn = "$workdir/recout.mlf";
