@@ -132,8 +132,7 @@ $(wd)data/wordlist/test-unk-nosp-phonet: $(wd)data/wordlist/test-unk-phonet
 
 $(wd)data/wordlist/test-unk-phonet: $(EV_wordlist_test_phonet)
 	mkdir -p "$(wd)data/wordlist"
-	echo '!!UNK  sil' > "$(wd)data/wordlist/test-unk-phonet"
-	perl -pe 's/^(\S+\s+)sp$$/$$1sil/m' < "$(EV_wordlist_test_phonet)" >> "$(wd)data/wordlist/test-unk-phonet"
+	perl -pe 's/^(\S+\s+)sp$$/$$1sil/m' < "$(EV_wordlist_test_phonet)" > "$(wd)data/wordlist/test-unk-phonet"
 
 train_heldout_ratio?=19
 $(wd)data/transcription/heldout.mlf $(wd)data/transcription/train/trans.mlf: $(EV_train_transcription)
