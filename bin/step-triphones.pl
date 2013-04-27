@@ -118,7 +118,8 @@ print STDERR (' ' x 8 ), "training tied...\n";
 
 print STDERR (' ' x 8 ), "evaluating...\n";
 {
-    ;;; last;
+    last unless $ENV{EV_evaluate_steps};
+    
     my $score = evaluate_hmm(
         ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
         hmmdir        => $opt{outdir},
