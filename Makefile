@@ -6,7 +6,7 @@ EV_outdir?=recognizer/
 train: $(wd)hmms/6-mixtures/hmmdefs $(wd)hmms/6-mixtures/macros $(wd)hmms/6-mixtures/phones
 	mkdir -p "$(EV_outdir)"
 	cp "$(eh)resources/htk-config" "$(wd)hmms/6-mixtures/hmmdefs" "$(wd)hmms/6-mixtures/macros" "$(wd)hmms/6-mixtures/phones" "$(EV_outdir)"
-	cat "$(wd)hmms/6-mixtures/macros" "$(wd)hmms/6-mixtures/hmmdefs" > "$(EV_outdir)hmmmodels"
+	cat "$(wd)hmms/6-mixtures/macros" "$(wd)hmms/6-mixtures/hmmdefs" > "$(EV_outdir)hmmmodel"
 
 test: $(EV_outdir)hmmdefs $(EV_outdir)macros $(EV_outdir)phones $(wd)data/wordlist/test-unk-phonet $(EV_test_transcription) $(EV_test_mfcc)
 	mkdir -p "$(wd)temp/test"
