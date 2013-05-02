@@ -79,6 +79,11 @@ print STDERR (' ' x 8), "aligning...\n";
     h(stringify_options(@hled_options));
 }
 
+print STDERR (' ' x 8), "adding confident...\n";
+if (-e $ENV{EV_confident_mlf}) {
+    system qq(cat "$ENV{EV_confident_mlf}" >> "$opt{'out-mlf'}");
+}
+
 print STDERR (' ' x 8), "training...\n";
 hmmiter(
     ( map {;$_ => $opt{$_}} qw(iter indir outdir mfccdir conf phones) ),
