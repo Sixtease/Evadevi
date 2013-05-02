@@ -19,7 +19,19 @@ sub h {
     my $log_dir = "$ENV{EV_workdir}log/htk";
     system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
     my $log_fn = sprintf "$log_dir/" . time() . "-$$-$prg";
-    $cmd .= qq( > "$log_fn");
+    
+    my $redir_sign = '>';
+    
+    if ($opt{log_cmd}) {
+        $redir_sign = '>>';
+        my $log_fh;
+        open($log_fh, '>', $log_fn)
+        ? print {$log_fh} "$cmd\n\n"
+        : warn "Failed opening log file '$log_fn' for command '$cmd'; continuing...";
+        close $log_fh;
+    }
+    
+    $cmd .= qq( $redir_sign "$log_fn");
     
     local $ENV{LANG} = $opt{LANG} if $opt{LANG};
     

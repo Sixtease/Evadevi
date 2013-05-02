@@ -111,7 +111,7 @@ sub evaluate_hmm {
 
 sub julius_parallel {
     my ($opt) = @_;
-    h('julius ' . stringify_options(%$opt, '2>' => '/dev/null'), LANG => 'C');
+    h('julius ' . stringify_options(%$opt, '2>' => '/dev/null'), LANG => 'C', log_cmd => 1);
 }
 
 1
