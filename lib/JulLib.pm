@@ -3,7 +3,7 @@ package JulLib;
 use strict;
 use utf8;
 use Exporter qw(import);
-use HTKUtil qw(mlf2scp h);
+use HTKUtil qw(mlf2scp h);  # Score
 use Evadevi::Util qw(stringify_options);
 
 our @EXPORT_OK = qw(evaluate_hmm);
