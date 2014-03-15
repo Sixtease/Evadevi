@@ -106,7 +106,7 @@ sub recout_to_mlf {
 sub recognize {
     my %opt = @_;
     my $LMf = $opt{LMf} || die 'Missing language model (LMf)';
-    my $LMb = $opt{LMb} || die 'Need backward language model (LMb)';
+    my $LMb = $opt{LMb};
     my $hmmdir = $opt{hmmdir} || die 'Missing directory with HMMs to test (hmmdir)';
     my $trans_fn = $opt{transcription} || die 'Missing transcription file (transcription)';
     my $wordlist_fn = $opt{wordlist} || die 'Missing wordlist file (wordlist)';
@@ -135,9 +135,11 @@ sub recognize {
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
     
+    my @lmb_opt = ();
+    @lmb_opt = (-nrl => $LMb) if $LMb;
     my $recout_fn = julius_parallel({
         -nlr => $LMf,
-        -nrl => $LMb,
+        @lmb_opt,
         -h => $hmm_fn,
         -filelist => $scp_fn,
         -v => $wordlist_fn,
