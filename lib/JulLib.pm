@@ -14,6 +14,7 @@ sub evaluate_hmm {
     my $trans_fn = $opt{transcription} || die 'Missing transcription file (transcription)';
     my $workdir = $opt{workdir} || $hmmdir;
     my $phones_fn = $opt{phones} || "$hmmdir/phones";
+    my $scoredir = $opt{scoredir} || $hmmdir;
     
     my $recout_fn = recognize(%opt);
     
@@ -30,13 +31,13 @@ sub evaluate_hmm {
     );
     
     # save score next to hmmdefs
-    my $opened = open my $score_fh, '>', "$hmmdir/score";
+    my $opened = open my $score_fh, '>', "$scoredir/score";
     if ($opened) {
         print {$score_fh} $score->{raw};
         close $opened;
     }
     else {
-        warn "Couldn't save score to '$hmmdir/score'";
+        warn "Couldn't save score to '$scoredir/score'";
     }
     
     return $score;

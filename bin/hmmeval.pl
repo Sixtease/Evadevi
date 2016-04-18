@@ -18,6 +18,7 @@ my %options = (
 GetOptions(\%options, qw(
     b
     hmmdir=s
+    scoredir=s
     workdir=s
     mfccdir=s
     conf=s
