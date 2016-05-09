@@ -163,6 +163,86 @@ sub julius_parallel {
     h('julius ' . stringify_options(%$opt, '2>' => '/dev/null'), LANG => 'C', log_cmd => 1);
 }
 
+sub recout_to_utterance_timespans {
+    my ($recout_fn, $splits_fn) = @_;
+    my @splits;
+    {
+        open my $splits_fh, '<', $splits_fn or die "Couldn't open splits file: '$splits_fn': $!";
+        while (<$splits_fh>) {
+            my ($sent_id, $stem, $start_ts, $end_ts) = /^(\S+)\s+(\S+)\s+([\d.]+)\s*\.\.\s*([\d\.]+)$/;
+            push @splits, {
+                sent_id  => $sent_id,
+                start_ts => $start_ts,
+            };
+        }
+    }
+    open my $recout_fh, '<', $recout_fn or die "Couldn't open recout file '$recout_fn': $!";
+    my $offset = 0;
+    my $in_pa = 0;  # phoneme alignment
+    my $inside_word = 0;
+    my $prev_end;
+    RECOUTLINE:
+    while (<$recout_fh>) {
+        if (/input MFCC file:/) {
+            my $split = shift @splits;
+            my $expected_sent_id = $split->{sent_id};
+            if (index($_, $expected_sent_id) < 0) {
+                die "mismatching sentence ID $expected_sent_id X $_";
+            }
+            $offset = $split->{start_ts};
+        }
+        if (/-- phoneme alignment --/) {
+            $in_pa = 1;
+        }
+        if (/=== end forced alignment ===/) {
+            $in_pa = 0;
+        }
+        if ($in_pa) {
+            my $rec = parse_pa($_);
+            next RECOUTLINE if not $rec;
+            if (is_sil($rec->{phone})) {
+                if ($inside_word) {
+                    $inside_word = 0;
+                    print $prev_end, "\n";
+                }
+                else {
+                    # silence outside word, ignore
+                }
+            }
+            else {
+                ($prev_end) = $offset + $rec->{end}/100;
+                if ($inside_word) {
+                    # utterance inside word, save end and skip
+                }
+                else {
+                    print $offset + $rec->{start}/100, ' .. ';
+                    $inside_word = 1;
+                }
+            }
+        }
+    }
+}
+
+sub parse_pa {
+    my ($line) = @_;
+    my ($start, $end, $score, $phone) = $line =~ /\[\s*(\d+)\s+(\d+)\s*\]\s*(-?[\d\.]+)\s+(\S+)/;
+    return if not $start;
+    $phone =~ s/\[.*//;
+    $phone =~ s/\+.*//;
+    $phone =~ s/.*-//;
+    return {
+        start => $start,
+        end   => $end,
+        score => $score,
+        phone => $phone,
+    };
+}
+
+sub is_sil {
+    my ($phone) = @_;
+    return {sil => 1, sp => 1}->{$phone};
+}
+
 1
 
 __END__
