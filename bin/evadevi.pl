@@ -11,7 +11,8 @@ GetOptions( \%opt, qw(
     train-wordlist=s
     train-transcription=s
     test-wordlist=s
-    lm=s
+    lmf=s
+    lmb=s
     monophones-only|m
     homedir=s
     workdir=s
@@ -24,7 +25,8 @@ $ENV{EV_train_mfcc}            = $opt{'train-mfcc'}          if $opt{'train-mfcc
 $ENV{EV_wordlist_train_phonet} = $opt{'train-wordlist'}      if $opt{'train-wordlist'};
 $ENV{EV_train_transcription}   = $opt{'train-transcription'} if $opt{'train-transcription'};
 $ENV{EV_wordlist_test_phonet}  = $opt{'test-wordlist'}       if $opt{'test-wordlist'};
-$ENV{EV_LM}                    = $opt{lm}                    if $opt{lm};
+$ENV{EV_LMf}                   = $opt{lmf}                   if $opt{lmf};
+$ENV{EV_LMb}                   = $opt{lmb}                   if $opt{lmb};
 
 die '--train-mfcc option must specify a directory with training audio data in MFCC format; the files must end with .mfcc'
     if not -d $ENV{'EV_train_mfcc'};
@@ -32,7 +34,8 @@ die '--train-wordlist option must specify a file with phonetic training dictiona
 die '--train-transcription option must specify a file with training transcription in HTK MLF format'
     if not -e $ENV{'EV_train_transcription'};
 die '--test-wordlist option must specify a file with phonetic dictionary for testing' if not -e $ENV{'EV_wordlist_test_phonet'};
-die '--lm option must specify a file with language model in HTK lattice format' if not -e $ENV{EV_LM};
+die '--lmf option must specify a file with language model in ARPA format' if not -e $ENV{EV_LMf};
+die '--lmb option must specify a file with language model in ARPA format' if not -e $ENV{EV_LMb};
 
 $ENV{EV_heldout_ratio}         = $opt{'heldout-ratio'}       if $opt{'heldout-ratio'};
 $ENV{EV_min_mixtures}          = $opt{'min-mixtures'}        if $opt{'min-mixtures'};
@@ -73,7 +76,8 @@ Evadevi -- a chain of scripts to train HTK acoustic models from transcribed spee
     --train-wordlist data/wordlist/train-phonet \
     --train-transcription data/transcription/train.mlf \
     --test-wordlist data/wordlist/test-phones \
-    --lm data/language-model/bigram.lat \
+    --lmf data/language-model/trigram.arpa \
+    --lmb data/language-model/trigram-backwards.arpa \
     --homedir ~/Evadevi/ [--outdir hmms/] [--workdir temp/]
 
 =head1 DESCRIPTION
