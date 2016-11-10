@@ -410,25 +410,33 @@ package Score;
 use overload (
     '""' => sub {
         my ($self) = @_;
-        return $self->{precision}
+        return $self->{precision};
     },
     '0+' => sub {
         my ($self) = @_;
-        return $self->{precision}
+        return $self->{precision};
     },
     '<=>' => sub {
         my ($self, $other) = @_;
         if (ref $other eq 'Score') {
             $other = $other->{precision};
         }
-        return ($self->{precision} <=> $other)
+        return ($self->{precision} <=> $other);
     },
     '*' => sub {
         my ($self, $other) = @_;
         if (ref $other eq 'Score') {
-            $other = $other->{precision}
+            $other = $other->{precision};
         }
-        return $self->{precision} * $other
+        return $self->{precision} * $other;
+    },
+    '-' => sub {
+        my ($self, $other, $swap) = @_;
+        if (ref $other eq 'Score') {
+            $other = $other->{precision};
+        }
+        my $result = $self->{precision} - $other;
+        return $swap ? -$result : $result;
     },
 );
 sub new {
