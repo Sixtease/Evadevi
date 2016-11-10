@@ -62,6 +62,22 @@ $ENV{EV_workdir} = $opt{workdir} if $opt{workdir};
 
 s{/?$}{/} for grep $_, @ENV{qw(EV_homedir EV_outdir EV_workdir)};
 
+print STDERR <<EOMSG;
+export \\
+    EV_homedir="$ENV{EV_homedir}"\\
+    EV_outdir="$ENV{EV_outdir}"\\
+    EV_workdir="$ENV{EV_workdir}"\\
+    EV_use_triphones="$ENV{EV_use_triphones}"\\
+    EV_min_mixtures="$ENV{EV_min_mixtures}"\\
+    EV_heldout_ratio="$ENV{EV_heldout_ratio}"\\
+    EV_LMb="$ENV{EV_LMb}"\\
+    EV_LMf="$ENV{EV_LMf}"\\
+    EV_wordlist_test_phonet="$ENV{EV_wordlist_test_phonet}"\\
+    EV_train_transcription="$ENV{EV_train_transcription}"\\
+    EV_wordlist_train_phonet="$ENV{EV_wordlist_train_phonet}"\\
+    EV_train_mfcc="$ENV{EV_train_mfcc}"
+EOMSG
+
 system(qq(. "$homedir/config.sh"; make -f "$homedir/Makefile" train));
 
 __END__
