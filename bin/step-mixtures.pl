@@ -22,6 +22,7 @@ GetOptions(\%opt, qw(
     conf=s
     mfccdir=s
     wordlist=s
+    initial_mixture_count=s
 ));
 
 my @mixture_opt = shellwords($ENV{mixture_opt});
@@ -31,7 +32,9 @@ HTKUtil::AddMixtures::init(
     "--starthmm=$opt{indir}",
     "--outdir=$opt{outdir}",
     "--conf=$opt{conf}",
-    '-a',
+    "--nummixt=$opt{initial_mixture_count}",
+    '--all',
+    '--individual',
     @mixture_opt,
 );
 HTKUtil::AddMixtures::main();
