@@ -44,6 +44,7 @@ my $init_mixture_count = 1;
 my $split_all = 0;
 my $split_individual = 0;
 my $min_mixtures = $ENV{EV_min_mixtures} || 0;
+my $allowed_decrease = $ENV{EV_mixtures_allowed_decrease} || 1;
 
 sub use_triphones() { return not $dont_use_triphones }
 
@@ -124,7 +125,7 @@ sub split_mixtures {
         open my $score_fh, '>', "$outdir/score" or die "Couldn't open '$outdir/score' for writing";
         print {$score_fh} "$score\n\n$score->{raw}\n";
     }
-    return $score
+    return $score;
 }
 
 sub split_all {
@@ -144,6 +145,8 @@ sub split_all {
     );
     my $prevdir = $indir;
     $MIXTURE_COUNT{'*'} = $init_mixture_count;
+    my $max_score = $prev_score;
+    my $windir = $indir;
     print "Start score: $prev_score\n";
     STEP:
     while(1) {
@@ -153,13 +156,18 @@ sub split_all {
         mkdir $stepdir;
         my $score = try_phone('*', $indir, $stepdir);
         print "$score\n";
-        if ($score <= $prev_score and $MIXTURE_COUNT{'*'} >= $min_mixtures) {
-            print "Winner is $prev_score in $prev_score->{dir}\n";
+        if ($score <= $max_score - $allowed_decrease) {
+            print "Winner is $max_score in $windir\n";
             unlink "$outdir/winner";
-            mksymlink($prevdir, "$outdir/winner");
-            return $prevdir
+            mksymlink($windir, "$outdir/winner");
+            $starting_hmm = "$windir/reestd";
+            return $windir;
         }
         else {
+            if ($score > $max_score) {
+                $max_score = $score;
+                $windir = "$score->{dir}/reestd";
+            }
             $indir = "$score->{dir}/reestd";
             $prev_score = $score;
             $prevdir = "$prev_score->{dir}/reestd";
@@ -248,7 +256,7 @@ sub try_phone {
     $score->{dir} = $outdir;
     $scores->{$phone} = $score;
     $scores->{max} = $score > $scores->{max} ? $score : $scores->{max};
-    return $score
+    return $score;
 }
 
 sub main {
@@ -256,8 +264,7 @@ sub main {
         die "Nothing to split? Provide -a, -i or both to split all or individual phonemes, respectively";
     }
     if ($split_all) {
-        my $all_winner = split_all();
-        $starting_hmm = $all_winner;
+        split_all();
         $init_mixture_count = $MIXTURE_COUNT{'*'};
     }
     if ($split_individual) {
