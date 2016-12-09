@@ -89,13 +89,23 @@ sub init {
 
 my %MIXTURE_COUNT;
 
-sub split_mixtures {
+sub split_phone {
     my ($hmms, $new_cnt_mixtures, $indir, $outdir) = @_;
     system(qq(mkdir -p "$outdir/split"));
     {
         open my $hed_fh, '>', "$outdir/hed" or die "Couldn't open '$outdir/hed' for writing: $!";
-        print {$hed_fh} qq(MU $new_cnt_mixtures {$hmms.state[2-4].mix});
+        print {$hed_fh} qq(MU $new_cnt_mixtures {$hmms.state[2-4].mix}\n);
+        if (use_triphones and $hmms =~ /^\w+$/) {
+            print {$hed_fh} qq(MU $new_cnt_mixtures {*-$hmms.state[2-4].mix}\n);
+            print {$hed_fh} qq(MU $new_cnt_mixtures {$hmms+*.state[2-4].mix}\n);
+            print {$hed_fh} qq(MU $new_cnt_mixtures {*-$hmms+*.state[2-4].mix}\n);
+        }
     }
+    return split_mixtures($indir, $outdir);
+}
+
+sub split_mixtures {
+    my ($indir, $outdir) = @_;
     h(qq(HHEd -T 1 -A -D -H "$indir/macros" -H "$indir/hmmdefs" -M "$outdir/split" "$outdir/hed" "$phones_fn"));
     my $prevdir = "$outdir/split";
     hmmiter(
@@ -122,7 +132,6 @@ sub split_mixtures {
             transcription => $heldout_transcription_fn,
             t => '60.0',
         );
-        $score->{phone} = $hmms;
         open my $score_fh, '>', "$outdir/score" or die "Couldn't open '$outdir/score' for writing";
         print {$score_fh} "$score\n\n$score->{raw}\n";
     }
@@ -223,28 +232,41 @@ sub find_best_splits {
             print "phone $monophone ";
             my $score = try_phone($monophone, $indir, $stepdir, \%scores);
             print "$score\n";
-            if (use_triphones) {
-                my $mask = "*-$monophone+*";
-                print "mask $mask ";
-                $score = try_phone($mask, $indir, $stepdir, \%scores);
-                print "$score\n";
-            }
         }
         my $max = $scores{max};
         my $winner = "$max->{dir}/reestd";
-        mksymlink($winner, "$stepdir/winner");
-        $indir = $winner;
-        print "Winner: $winner with $scores{max}{precision}\n";
-        
-        if ($max > $prev_score) {
-            $prev_score = $max;
-            $MIXTURE_COUNT{ $max->{phone} }++;
+        print "Winner: $winner with $max->{precision}\n";
+
+        my @improvers = sort grep {; $scores{$_} > $prev_score } keys %scores;
+        my $step_score;
+        my %MIXTURE_COUNT_BACKUP = %MIXTURE_COUNT;
+        if (@improvers == 1) {
+            $step_score = $max;
+        }
+        elsif (@improvers > 1) {
+            $step_score = split_multiple(\@improvers, $indir, $stepdir);
         }
         else {
             print "Performance lowered; overall winner is $prev_score->{precision} in $prev_score->{dir}\n";
-            unlink "$outdir/winner";
             mksymlink($prev_score->{dir}, "$outdir/winner");
             last STEP
+        }
+        my $result = "$step_score->{dir}/reestd";
+        mksymlink($result, "$stepdir/winner");
+        $indir = $winner;
+        print "Result: $result with $step_score->{precision}\n";
+
+        if ($result > $max) {
+            print "multi-split led to better score than single; taking multi\n";
+            mksymlink($result, "$stepdir/winner");
+            $prev_score = $step_score;
+        }
+        else {
+            print "multi-split led to worse score than single; taking single\n";
+            %MIXTURE_COUNT = %MIXTURE_COUNT_BACKUP;
+            $MIXTURE_COUNT{ $max->{phone} }++;
+            mksymlink($winner, "$stepdir/winner");
+            $prev_score = $max;
         }
     }
 }
@@ -264,11 +286,30 @@ sub try_phone {
     }
     my $outdir = "$stepdir/$phone_str$new_mixture_count";
     mkdir "$outdir";
-    my $score = split_mixtures($phone, $new_mixture_count, $indir, $outdir);
+    my $score = split_phone($phone, $new_mixture_count, $indir, $outdir);
+    $score->{phone} = $phone;
     $score->{dir} = $outdir;
     $scores->{$phone} = $score;
     $scores->{max} = $score > $scores->{max} ? $score : $scores->{max};
     return $score;
+}
+
+sub split_multiple {
+    my ($phones, $indir, $stepdir) = @_;
+    my $outdir = join '', $stepdir, '/', map {$_, ++$MIXTURE_COUNT{$_}} @$phones;
+    system(qq(mkdir -p "$outdir/split"));
+	open my $hed_fh, '>', "$outdir/hed" or die "Couldn't open '$outdir/hed' for writing: $!";
+    for my $phone (@$phones) {
+        my $new_cnt_mixtures = $MIXTURE_COUNT{$phone};
+        print {$hed_fh} qq(MU $new_cnt_mixtures {$phone.state[2-4].mix}\n);
+        if (use_triphones and $phone =~ /^\w+$/) {
+            print {$hed_fh} qq(MU $new_cnt_mixtures {*-$phone.state[2-4].mix}\n);
+            print {$hed_fh} qq(MU $new_cnt_mixtures {$phone+*.state[2-4].mix}\n);
+            print {$hed_fh} qq(MU $new_cnt_mixtures {*-$phone+*.state[2-4].mix}\n);
+        }
+    }
+    close $hed_fh;
+    return split_mixtures($indir, $outdir);
 }
 
 sub main {
