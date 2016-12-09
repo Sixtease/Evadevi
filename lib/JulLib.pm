@@ -160,7 +160,7 @@ sub recognize {
 
 sub julius_parallel {
     my ($opt) = @_;
-    h('julius ' . stringify_options(%$opt, '2>' => '/dev/null'), LANG => 'C', log_cmd => 1);
+    h('julius ' . stringify_options(%$opt, '2>' => '/tmp/julius-err'), LANG => 'C', log_cmd => 1);
 }
 
 sub recout_to_utterance_timespans {
