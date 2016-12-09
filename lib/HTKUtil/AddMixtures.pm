@@ -44,7 +44,8 @@ my $init_mixture_count = 1;
 my $split_all = 0;
 my $split_individual = 0;
 my $min_mixtures = $ENV{EV_min_mixtures} || 0;
-my $allowed_decrease = $ENV{EV_mixtures_allowed_decrease} || 1;
+my $allowed_decrease = $ENV{EV_mixtures_allowed_decrease} || 0.3;
+my $max_consecutive_decreases = $ENV{EV_mixtures_max_consecutive_decreases} || 3;
 
 sub use_triphones() { return not $dont_use_triphones }
 
@@ -147,20 +148,31 @@ sub split_all {
     $MIXTURE_COUNT{'*'} = $init_mixture_count;
     my $max_score = $prev_score;
     my $windir = $indir;
+    my $consecutive_decreases = 0;
     print "Start score: $prev_score\n";
     STEP:
-    while(1) {
+    while (1) {
         $step++;
         print "Step $step ";
         my $stepdir = "$outdir/Astep$step";
         mkdir $stepdir;
         my $score = try_phone('*', $indir, $stepdir);
         print "$score\n";
-        if ($score <= $max_score - $allowed_decrease) {
+
+        if ($score < $prev_score) {
+            $consecutive_decreases++;
+        }
+        elsif ($score > $prev_score) {
+            $consecutive_decreases = 0;
+        }
+
+        if ( $consecutive_decreases >= $max_consecutive_decreases
+            or $score <= $max_score - $allowed_decrease
+        ) {
             print "Winner is $max_score in $windir\n";
             unlink "$outdir/winner";
             mksymlink($windir, "$outdir/winner");
-            $starting_hmm = "$windir/reestd";
+            $starting_hmm = $windir;
             return $windir;
         }
         else {

@@ -15,7 +15,9 @@ use HTKUtil::AddMixtures;
 use Evadevi::Util qw(cp);
 use JulLib qw(evaluate_hmm);
 
-my %opt;
+my %opt = (
+    initial_mixture_count => 1,
+);
 GetOptions(\%opt, qw(
     indir=s
     outdir=s
