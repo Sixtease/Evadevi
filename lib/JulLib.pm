@@ -96,8 +96,10 @@ sub recout_to_mlf {
         m/-- word alignment --/ and $in_walign = 1;
         m/=== end forced alignment ===/ and $in_walign and (print {$mlf_out_fh} ".\n"), $in_walign = 0;
         if ($in_walign and my @m = /^\[\s*(\d+)\s+(\d+)\s*\]\s*([-\d.]+)\s+(\S+)/) {
-            next if $m[3] =~ /^</;
-            print {$mlf_out_fh} $m[0].'00000 '.$m[1]."00000 $m[3] $m[2]\n";
+            my ($start, $end, $prob, $word) = @m;
+            next if $word =~ /^</;
+            $word =~ s/'/\\'/g;
+            print {$mlf_out_fh} "${start}00000 ${end}00000 $word $prob\n";
         }
     }
     close $recout_fh;
