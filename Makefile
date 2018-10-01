@@ -128,7 +128,7 @@ $(wd)data/phones/monophones: $(EV_wordlist_train_phonet) $(EV_wordlist_test_phon
 	wordlist2phones.pl "$(EV_wordlist_train_phonet)" "$(EV_wordlist_test_phonet)" > "$(wd)data/phones/monophones"
 
 $(wd)data/wordlist/test-unk-nosp-phonet: $(wd)data/wordlist/test-unk-phonet
-	perl -pe 's/\s*\bsp\b//' < "$(wd)data/wordlist/test-unk-phonet" > "$(wd)data/wordlist/test-unk-nosp-phonet"
+	perl -pe 's/\s+\bsp\b//g' < "$(wd)data/wordlist/test-unk-phonet" > "$(wd)data/wordlist/test-unk-nosp-phonet"
 
 $(wd)data/wordlist/test-unk-phonet: $(EV_wordlist_test_phonet)
 	mkdir -p "$(wd)data/wordlist"
