@@ -109,7 +109,7 @@ $(wd)data/wordlist/train-sp-sil-phonet: $(wd)data/wordlist/train-sil-phonet
 
 $(wd)data/wordlist/train-sil-phonet: $(EV_wordlist_train_phonet)
 	mkdir -p "$(wd)data/wordlist"
-	echo 'silence sil' > "$(wd)data/wordlist/train-sil-phonet"
+	echo '<silence> sil' > "$(wd)data/wordlist/train-sil-phonet"
 	cat < "$(EV_wordlist_train_phonet)" >> "$(wd)data/wordlist/train-sil-phonet"
 
 $(wd)data/phones/fulllist: $(EV_wordlist_test_phonet) $(wd)data/phones/triphones
