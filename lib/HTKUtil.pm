@@ -11,14 +11,21 @@ our @EXPORT = qw(generate_scp mlf2scp hmmiter h);
 
 sub h {
     my ($cmd, %opt) = @_;
-    die "EV_workdir env var must be set" if not $ENV{EV_workdir};
 
     my ($prg) = split /\s+/, $cmd, 2;
     $prg =~ s/^["']|['"]$//g;
 
-    my $log_dir = "$ENV{EV_workdir}log/htk";
-    system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
-    my $log_fn = sprintf "$log_dir/" . time() . "-$$-$prg";
+    my $log_fn;
+
+    if ($opt{out_fn}) {
+      $log_fn = $opt{out_fn};
+    }
+    else {
+      die "EV_workdir env var must be set" if not $ENV{EV_workdir};
+      my $log_dir = "$ENV{EV_workdir}log/htk";
+      system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
+      $log_fn = sprintf "$log_dir/" . time() . "-$$-$prg";
+    }
 
     my $redir_sign = '>';
 

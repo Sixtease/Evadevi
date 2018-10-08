@@ -3,6 +3,7 @@ package JulLib;
 use strict;
 use utf8;
 use Exporter qw(import);
+use File::Basename qw(basename);
 use HTKUtil qw(mlf2scp h);  # Score
 use Evadevi::Util qw(stringify_options);
 
@@ -155,6 +156,7 @@ sub recognize {
             val => '8.0 -4.0',
         },
         -fallback1pass => '',
+        workdir => $workdir,
     });
 
     return $recout_fn;
@@ -162,7 +164,53 @@ sub recognize {
 
 sub julius_parallel {
     my ($opt) = @_;
-    h('julius ' . stringify_options(%$opt, '2>' => '/tmp/julius-err'), LANG => 'C', log_cmd => 1);
+    my $workdir = $opt->{workdir};
+    my $scp_fn = $opt->{scp_fn};
+    my $thread_cnt = $ENV{EV_thread_cnt} || 1;
+    my @scp_part_fns = block_split_scp($scp_fn, $workdir);
+    my @recout_part_fns = map "$_.recout", @scp_part_fns;
+    my @commands = map {
+        hsub(
+            'julius ' . stringify_options(
+                %$opt,
+                -filelist => $_,
+                '2>' => '/tmp/julius-err',
+            ),
+            LANG => 'C',
+            log_cmd => 1,
+            out_fn => "$_.recout",
+        );
+    } @scp_part_fns;
+    run_parallel(@commands);
+    my $outfile = "$workdir/" . time() . "-$$-julius";
+    {
+      open my $out_fh, '>:utf8', $outfile;
+      local *STDOUT = $out_fh;
+      system('cat', @recout_part_fns);
+    }
+    return $outfile;
+}
+
+sub block_split_scp {
+    my ($scp_fn, $outdir, $part_cnt) = @_;
+    my $scp_bn = basename $scp_fn;
+    my @scp_lines = do {{
+        local @ARGV = $scp_fn;
+        <ARGV>;
+    }};
+    my $line_cnt = @scp_lines;
+    $part_cnt ||= $ENV{EV_thread_cnt} || 1;
+    my @scp_part_fns = map "$outdir/${scp_bn}_$_", 1 .. $thread_cnt;
+    my @scp_part_fhs = map {
+        open my $fh, '>', $_ or die "Couldn't open '$_' for writing: $!"
+        $fh;
+    } @scp_part_fns;
+    for my $i (0 .. $#scp_lines) {
+        my $part_no = $part_cnt * $i / $line_cnt;
+        print {$scp_part_fhs[int $part_no]} $scp_lines[$i];
+    }
+    close for @scp_part_fhs;
+    return @scp_part_fns;
 }
 
 sub recout_to_utterance_timespans {
