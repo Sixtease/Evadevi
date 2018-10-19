@@ -32,7 +32,7 @@ GetOptions( \%opt, qw(
     mfccdir=s
     conf=s
     tree-hed-tmpl=s
-    triphone-tree=s
+    triphone-questions=s
     iter=i
     mlf=s
 ));
@@ -47,7 +47,7 @@ print STDERR (' ' x 8), "preparing...\n";
 
     mktreehed(
         tmpl_fn    => $opt{'tree-hed-tmpl'},
-        qs         => $opt{'triphone-tree'},
+        qs         => $opt{'triphone-questions'},
         monophones => $opt{monophones},
         tiedlist   => $opt{tiedlist},
         fulllist   => $opt{fulllist},
