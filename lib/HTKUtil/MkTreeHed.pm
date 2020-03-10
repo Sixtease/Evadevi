@@ -15,13 +15,14 @@ our @EXPORT = qw(mktreehed);
 
 sub mktreehed {
     my %opt = @_;
-    
+
     die 'no template for triphone tying tree'    if not $opt{tmpl_fn};
     die 'no questions for triphone tying tree'   if not $opt{qs};
     die 'no monophones for triphone tying tree'  if not $opt{monophones};
     die 'no >tiedlist for triphone tying tree'   if not $opt{tiedlist};
     die 'no >stats file for triphone tying tree' if not $opt{stats_fn};
-    
+    die 'no >trees file for unseen triphones'    if not $opt{trees_fn};
+
     my @monophones;
     if (ref($opt{phones}) eq 'ARRAY') {
         @monophones = @{$opt{monophones}};
@@ -40,6 +41,7 @@ sub mktreehed {
         tiedlist   => $opt{tiedlist},
         fulllist   => $opt{fulllist},
         stats      => $opt{stats_fn},
+        trees      => $opt{trees_fn},
     }, $opt{out}) or die $tt->error;
 }
 
