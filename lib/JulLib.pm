@@ -183,11 +183,17 @@ sub julius_parallel {
     } @scp_part_fns;
     run_parallel(\@commands);
     my $outfile = "$workdir/" . time() . "-$$-julius";
-    {
-      open my $out_fh, '>:utf8', $outfile;
-      local *STDOUT = $out_fh;
-      system('cat', @recout_part_fns);
+
+
+    open my $out_fh, '>', $outfile;
+    for my $recout_part_fn (@recout_part_fns) {
+        open my $in_fh, '<', $recout_part_fn or warn("failed opening $recout_part_fn"), next;
+        while (<$in_fh>) {
+            print {$out_fh} $_;
+        }
     }
+    close $out_fh;
+
     return $outfile;
 }
 
