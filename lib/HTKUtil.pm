@@ -7,7 +7,7 @@ use Exporter qw/import/;
 use File::Basename qw(basename);
 use Evadevi::Util qw(run_parallel stringify_options get_filehandle);
 
-our @EXPORT = qw(generate_scp mlf2scp hmmiter h);
+our @EXPORT = qw(generate_scp mlf2scp hmmiter h hsub);
 
 sub h {
     my ($cmd, %opt) = @_;

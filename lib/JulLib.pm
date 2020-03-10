@@ -4,8 +4,8 @@ use strict;
 use utf8;
 use Exporter qw(import);
 use File::Basename qw(basename);
-use HTKUtil qw(mlf2scp h);  # Score
-use Evadevi::Util qw(stringify_options);
+use HTKUtil qw(mlf2scp h hsub);  # Score
+use Evadevi::Util qw(run_parallel stringify_options);
 
 our @EXPORT_OK = qw(evaluate_hmm);
 
@@ -181,7 +181,7 @@ sub julius_parallel {
             out_fn => "$_.recout",
         );
     } @scp_part_fns;
-    run_parallel(@commands);
+    run_parallel(\@commands);
     my $outfile = "$workdir/" . time() . "-$$-julius";
     {
       open my $out_fh, '>:utf8', $outfile;
