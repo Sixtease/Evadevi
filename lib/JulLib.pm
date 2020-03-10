@@ -206,9 +206,9 @@ sub block_split_scp {
     }};
     my $line_cnt = @scp_lines;
     $part_cnt ||= $ENV{EV_thread_cnt} || 1;
-    my @scp_part_fns = map "$outdir/${scp_bn}_$_", 1 .. $thread_cnt;
+    my @scp_part_fns = map "$outdir/${scp_bn}_$_", 1 .. $part_cnt;
     my @scp_part_fhs = map {
-        open my $fh, '>', $_ or die "Couldn't open '$_' for writing: $!"
+        open my $fh, '>', $_ or die "Couldn't open '$_' for writing: $!";
         $fh;
     } @scp_part_fns;
     for my $i (0 .. $#scp_lines) {
