@@ -164,8 +164,8 @@ sub recognize {
 
 sub julius_parallel {
     my ($opt) = @_;
-    my $workdir = $opt->{workdir};
-    my $scp_fn = $opt->{scp_fn};
+    my $workdir = delete $opt->{workdir};
+    my $scp_fn = $opt->{-filelist};
     my $thread_cnt = $ENV{EV_thread_cnt} || 1;
     my @scp_part_fns = block_split_scp($scp_fn, $workdir);
     my @recout_part_fns = map "$_.recout", @scp_part_fns;
