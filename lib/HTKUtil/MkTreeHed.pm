@@ -31,9 +31,9 @@ sub mktreehed {
         my $phones_fh = get_filehandle($opt{monophones});
         chomp(@monophones = <$phones_fh>);
     }
-    
+
     my $tt = Template->new(ABSOLUTE => 1);
-    
+
     $tt->process($opt{tmpl_fn}, {
         %ENV,
         qs         => $opt{qs},
