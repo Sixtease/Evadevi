@@ -215,7 +215,7 @@ sub block_split_scp {
         my $part_no = $part_cnt * $i / $line_cnt;
         print {$scp_part_fhs[int $part_no]} $scp_lines[$i];
     }
-    close for @scp_part_fhs;
+    close $_ for @scp_part_fhs;
     return @scp_part_fns;
 }
 
