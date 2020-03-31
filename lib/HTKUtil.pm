@@ -7,21 +7,28 @@ use Exporter qw/import/;
 use File::Basename qw(basename);
 use Evadevi::Util qw(run_parallel stringify_options get_filehandle);
 
-our @EXPORT = qw(generate_scp mlf2scp hmmiter h);
+our @EXPORT = qw(generate_scp mlf2scp hmmiter h hsub);
 
 sub h {
     my ($cmd, %opt) = @_;
-    die "EV_workdir env var must be set" if not $ENV{EV_workdir};
-    
+
     my ($prg) = split /\s+/, $cmd, 2;
     $prg =~ s/^["']|['"]$//g;
-    
-    my $log_dir = "$ENV{EV_workdir}log/htk";
-    system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
-    my $log_fn = sprintf "$log_dir/" . time() . "-$$-$prg";
-    
+
+    my $log_fn;
+
+    if ($opt{out_fn}) {
+      $log_fn = $opt{out_fn};
+    }
+    else {
+      die "EV_workdir env var must be set" if not $ENV{EV_workdir};
+      my $log_dir = "$ENV{EV_workdir}log/htk";
+      system(qq(mkdir -p "$log_dir")) if not -d $log_dir;
+      $log_fn = sprintf "$log_dir/" . time() . "-$$-$prg";
+    }
+
     my $redir_sign = '>';
-    
+
     if ($opt{log_cmd}) {
         $redir_sign = '>>';
         my $log_fh;
@@ -30,17 +37,17 @@ sub h {
         : warn "Failed opening log file '$log_fn' for command '$cmd'; continuing...";
         close $log_fh;
     }
-    
+
     $cmd .= qq( $redir_sign "$log_fn");
-    
+
     local $ENV{LANG} = $opt{LANG} if $opt{LANG};
-    
+
     if ($opt{exec}) {
         exec $cmd;
     }
     my $error = system $cmd;
     die "'$prg > $log_fn' failed with status $error" if $error;
-    
+
     return $log_fn
 }
 sub hsub {
@@ -54,7 +61,7 @@ sub hvite_parallel {
     my $recout_fn = $hvite_opt{'-i'};
     my $workdir = $opt{workdir} || '/tmp';
     my $thread_cnt = $opt{thread_cnt} || $ENV{EV_thread_cnt};
-    
+
     my @scp_part_fns = split_scp($thread_cnt, $scp_fn, $workdir);
     my @commands = map {;
         $hvite_opt{'-S'} = $_;
@@ -66,7 +73,7 @@ sub hvite_parallel {
     } @scp_part_fns;
 
     run_parallel(\@commands);
-    
+
     my @recout_fns = map "$_.recout", @scp_part_fns;
     merge_mlfs(\@recout_fns, $recout_fn, $scp_fn);
     unlink @recout_fns;
@@ -74,7 +81,7 @@ sub hvite_parallel {
 
 sub generate_scp {
     my ($scp_fn, @filelists) = @_;
-    
+
     if (@filelists == 0) {
         croak 'arrays of filenames expected'
     }
@@ -85,7 +92,7 @@ sub generate_scp {
         croak 'arrays of filenames expected' if ref $_ ne 'ARRAY';
         croak 'filenames arrays must be of equal length' if @$_ != @{$filelists[0]};
     }
-    
+
     open my $scp_fh, '>', $scp_fn or die "Couldn't open '$scp_fn' for writing: $!";
     for my $i (0 .. $#{$filelists[0]}) {
         my $line = join(' ', map $_->[$i], @filelists);
@@ -97,20 +104,20 @@ sub generate_scp {
 sub mlf2scp {
     my ($in_file, $scp_fn, @tmpls) = @_;
     my @lists = map [], @tmpls;
-    
+
     sub expand {
         my ($tmpl, $fn) = @_;
         $tmpl =~ s/\*/$fn/;
         return $tmpl
     }
-    
+
     my $in_fh = get_filehandle($in_file);
-    
+
     while (<$in_fh>) {
         m{^"\*/(.*)\.lab"$} or next;
         push @{$lists[$_]}, expand($tmpls[$_], $1) for 0 .. $#tmpls;
     }
-    
+
     generate_scp($scp_fn, @lists);
 }
 
@@ -127,13 +134,13 @@ sub hmmiter {
     $opt{t}            ||= $ENV{EV_HERest_t} or die '"t" param or "EV_HERest_t" must be set for hmmiter';
     $opt{parallel_cnt} ||= $ENV{EV_HERest_p};
     $opt{thread_cnt}   ||= $ENV{EV_thread_cnt} || 1;
-    
+
     $opt{scp_fn} = "$opt{workdir}/mfcc.scp";
     {
         open my $mlf_fh, '<', $opt{mlf} or die "Couldn't open transcription file '$opt{mlf}' for reading: $!";
         mlf2scp($mlf_fh, $opt{scp_fn}, "$opt{mfccdir}/*.mfcc");
     }
-    
+
     iterate(from => $opt{indir}, to => "$opt{workdir}/iter1", %opt);
     my $i;
     for my $_i (1 .. $opt{iter}-2) {
@@ -160,6 +167,9 @@ sub iterate {
         '-H' => ["$from/macros", "$from/hmmdefs"],
         '-M' => $to,
     );
+    if ($opt{extra_herest_options}) {
+      %herest_options = (%herest_options, %{ $opt{extra_herest_options} });
+    }
     $herest_options{'-w'} = $opt{w} if defined $opt{w};
     if (not $opt{parallel_cnt}) {
         h('HERest ' . stringify_options(%herest_options) . " $opt{phones}", LANG => 'C');
@@ -174,7 +184,7 @@ sub iterate {
             $herest_options{'-p'} = $split + 1;
             $herest_options{'-S'} = $scp_part_fns[$split];
             push @batch, hsub('HERest ' . stringify_options(%herest_options) . " $opt{phones}", exec => 1, LANG => 'C');
-            
+
             $thread = ($thread+1) % $opt{thread_cnt};
             if ($thread == 0) {
                 run_parallel(\@batch);
@@ -187,16 +197,16 @@ sub iterate {
             run_parallel(\@batch);
         }
         unlink @scp_part_fns;
-        
+
         # synthesize
         my @accumulators = glob "$to/HER*.acc";
         my $accumulators_fn = "$opt{workdir}/accumulators.scp";
         open my $accumulators_fh, '>', $accumulators_fn or die "Couldn't open '$accumulators_fn': $!";
         print {$accumulators_fh} "$_\n" for @accumulators;
-        
+
         $herest_options{'-p'} = 0;
         $herest_options{'-S'} = $accumulators_fn;
-        
+
         h('HERest ' . stringify_options(%herest_options) . " $opt{phones}", LANG => 'C');
         unlink @accumulators, $accumulators_fn;
     }
@@ -222,7 +232,7 @@ sub split_scp {
 
 sub evaluate_hmm {
     return print STDERR "Evaluating switched off" if $ENV{EV_no_eval};
-    
+
     my %opt = @_;
     my $hmmdir      = $opt{hmmdir}        or croak "Missing directory with HMMs to test (hmmdir)";
     my $workdir     = $opt{workdir} || '/tmp';
@@ -236,13 +246,13 @@ sub evaluate_hmm {
     my $p           = $opt{p} // $ENV{EV_HVite_p} // '0.0';
     my $s           = $opt{s} // $ENV{EV_HVite_s} // '5.0';
     my $thread_cnt  = $opt{thread_cnt} || $ENV{EV_thread_cnt} || 1;
-    
+
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
-    
+
     my $recout_raw_fn = "$workdir/recout-raw.mlf";
     unlink $recout_raw_fn;
-    
+
     my %hvite_opt = (
         '-T' => 1, '-A' => '', '-D' => '',
         '-l' => '*',
@@ -255,7 +265,7 @@ sub evaluate_hmm {
     );
     my @hvite_arg = ($wordlist_fn, $phones_fn);
     hvite_parallel(\%hvite_opt, \@hvite_arg, workdir => $workdir, thread_cnt => $thread_cnt);
-    
+
     open my $recout_raw_fh, '<', $recout_raw_fn or die "Couldn't open '$recout_raw_fn': $!";
     my $recout_fn = "$workdir/recout.mlf";
     open my $recout_fh, '>', $recout_fn or die "Couldn't open '$recout_fn' for writing: $!";
@@ -265,7 +275,7 @@ sub evaluate_hmm {
     }
     close $recout_fh;
     close $recout_raw_fh;
-    
+
     my $results_fn = h(stringify_options(
         ''   => 'HResults',
         '-A' => '', '-D' => '', '-T' => 1,
@@ -285,7 +295,7 @@ sub evaluate_hmm {
         }
     }
     $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
-    
+
     # save score next to hmmdefs
     my $opened = open my $score_fh, '>', "$hmmdir/score";
     if ($opened) {
@@ -295,7 +305,7 @@ sub evaluate_hmm {
     else {
         warn "Couldn't save score to '$hmmdir/score'";
     }
-    
+
     return Score->new($1, $raw);
 }
 
@@ -307,17 +317,17 @@ sub merge_mlfs {
         $fh
     } @$mlf_fns;
     open my $out_fh, '>', $out_fn or die "Couldn't open '$out_fn': $!";
-    
+
     # mlf header
     my $header;
     $header = <$_> for @mlf_fhs;
     print {$out_fh} $header;
-    
+
     my @top_sents = map {
         local $/ = "\n.\n";
         { sent => scalar(<$_>), fh => $_ }
     } @mlf_fhs;
-    
+
     my $sent_id;
     SENT:
     while (defined($sent_id = <$scp_fh>)) {
@@ -344,15 +354,15 @@ sub merge_mlfs {
 
 sub remove_empty_sentences_from_mlf {
     my ($in, $out) = @_;
-    
+
     my $in_fh  = get_filehandle($in);
     my $out_fh = get_filehandle($out, '>');
-    
+
     my %phones_to_ignore = (
         sil => 1,
         sp => 1,
     );
-    
+
     print {$out_fh} scalar <$in_fh>; # pass header through
     {
         local $/ = "\n.\n";

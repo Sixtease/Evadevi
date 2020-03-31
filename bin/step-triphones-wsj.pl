@@ -20,6 +20,7 @@ use JulLib qw(evaluate_hmm);
 
 my %opt = (
     iter => $ENV{EV_iter_triphones} || $ENV{EV_iter} || 2,
+    'triphone-trees' => $ENV{EV_triphone_trees},
 );
 
 GetOptions( \%opt, qw(
@@ -31,7 +32,8 @@ GetOptions( \%opt, qw(
     mfccdir=s
     conf=s
     tree-hed-tmpl=s
-    triphone-tree=s
+    triphone-questions=s
+    triphone-trees=s
     iter=i
     mlf=s
 ));
@@ -43,16 +45,17 @@ print STDERR (' ' x 8), "preparing...\n";
         "$opt{outdir}/0-nontied/base/mktri.hed",
         $opt{triphones},
     );
-    
+
     mktreehed(
         tmpl_fn    => $opt{'tree-hed-tmpl'},
-        qs         => $opt{'triphone-tree'},
+        qs         => $opt{'triphone-questions'},
         monophones => $opt{monophones},
         tiedlist   => "$opt{tiedlist}",
         stats_fn   => "$opt{outdir}/stats",
+        trees_fn   => $opt{'triphone-trees'},
         out        => "$opt{outdir}/1-tied/base/tree.hed",
     );
-    
+
     my @hhed_options = (
         ''   => 'HHEd',
         '-A' => '', '-D' => '', '-T' => 1,
@@ -72,7 +75,7 @@ print STDERR (' ' x 8), "training nontied...\n";
         workdir => "$opt{outdir}/0-nontied/iterations",
         phones => $opt{triphones},
     );
-    
+
     my @herest_options = (
         ''   => 'HERest',
         '-A' => '', '-D' => '', '-T' => 1,

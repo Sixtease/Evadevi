@@ -3,8 +3,9 @@ package JulLib;
 use strict;
 use utf8;
 use Exporter qw(import);
-use HTKUtil qw(mlf2scp h);  # Score
-use Evadevi::Util qw(stringify_options);
+use File::Basename qw(basename);
+use HTKUtil qw(mlf2scp h hsub);  # Score
+use Evadevi::Util qw(run_parallel stringify_options);
 
 our @EXPORT_OK = qw(evaluate_hmm);
 
@@ -15,21 +16,21 @@ sub evaluate_hmm {
     my $workdir = $opt{workdir} || $hmmdir;
     my $phones_fn = $opt{phones} || "$hmmdir/phones";
     my $scoredir = $opt{scoredir} || $hmmdir;
-    
+
     my $recout_fn = recognize(%opt);
-    
+
     my $mlf_out_fn = "$workdir/recout.mlf";
     recout_to_mlf(
         recout_fn => $recout_fn,
         mlf_out_fn => $mlf_out_fn,
     );
-    
+
     my $score = evaluate_recout(%opt,
         mlf_out_fn => $mlf_out_fn,
         workdir => $workdir,
         phones => $phones_fn,
     );
-    
+
     # save score next to hmmdefs
     my $opened = open my $score_fh, '>', "$scoredir/score";
     if ($opened) {
@@ -39,7 +40,7 @@ sub evaluate_hmm {
     else {
         warn "Couldn't save score to '$scoredir/score'";
     }
-    
+
     return $score;
 }
 
@@ -49,7 +50,7 @@ sub evaluate_recout {
     my $workdir = $opt{workdir} || die 'Missing workdir';
     my $phones_fn = $opt{phones} || die 'Missing phones';
     my $mlf_out_fn = $opt{mlf_out_fn} || die 'Missing mlf_out_fn (MLF recout to evaluate)';
-    
+
     my $results_fn = h(stringify_options(
         ''   => 'HResults',
         '-A' => '', '-D' => '', '-T' => 1,
@@ -69,19 +70,19 @@ sub evaluate_recout {
         }
     }
     $line =~ /%Corr=(\S+?),/ or die "Unexpected results:\n$raw";
-    
+
     return Score->new($1, $raw);
 }
 
 sub recout_to_mlf {
     my %opt = @_;
-    
+
     my $recout_fn = $opt{recout_fn};
     my $mlf_out_fn = $opt{mlf_out_fn};
-    
+
     open my $recout_fh, '<', $recout_fn or die "Couldn't open julius output file '$recout_fn': $!";
     open my $mlf_out_fh, '>', $mlf_out_fn or die "Couldn't open '$mlf_out_fn' for writing: $!";
-    
+
     print {$mlf_out_fh} "#!MLF!#\n";
     my $in_walign = 0;
     while (<$recout_fh>) {
@@ -96,8 +97,10 @@ sub recout_to_mlf {
         m/-- word alignment --/ and $in_walign = 1;
         m/=== end forced alignment ===/ and $in_walign and (print {$mlf_out_fh} ".\n"), $in_walign = 0;
         if ($in_walign and my @m = /^\[\s*(\d+)\s+(\d+)\s*\]\s*([-\d.]+)\s+(\S+)/) {
-            next if $m[3] =~ /^</;
-            print {$mlf_out_fh} $m[0].'00000 '.$m[1]."00000 $m[3] $m[2]\n";
+            my ($start, $end, $prob, $word) = @m;
+            next if $word =~ /^</;
+            $word =~ s/'/\\'/g;
+            print {$mlf_out_fh} "${start}00000 ${end}00000 $word $prob\n";
         }
     }
     close $recout_fh;
@@ -116,7 +119,7 @@ sub recognize {
     my $phones_fn = $opt{phones} || "$hmmdir/phones";
     my $align = $opt{align} || '-walign -palign';
     my $unk = $opt{unk} || '!!UNK';
-    
+
     my $hmm_fn;
     if (-e "$hmmdir/hmmmodel") {
         $hmm_fn = "$hmmdir/hmmmodel";
@@ -132,10 +135,10 @@ sub recognize {
         my $error = system(qq(cat "$hmmdir/macros" "$hmmdir/hmmdefs" > "$hmm_fn"));
         die "Failed to concatenate '$hmmdir/macros' and '$hmmdir/hmmdefs' to '$hmm_fn'" if $error;
     }
-    
+
     my $scp_fn = "$workdir/eval-mfc.scp";
     mlf2scp($trans_fn, $scp_fn, "$mfccdir/*.mfcc");
-    
+
     my @lmb_opt = ();
     @lmb_opt = (-nrl => $LMb) if $LMb;
     my $recout_fn = julius_parallel({
@@ -153,14 +156,67 @@ sub recognize {
             val => '8.0 -4.0',
         },
         -fallback1pass => '',
+        workdir => $workdir,
     });
-    
+
     return $recout_fn;
 }
 
 sub julius_parallel {
     my ($opt) = @_;
-    h('julius ' . stringify_options(%$opt, '2>' => '/tmp/julius-err'), LANG => 'C', log_cmd => 1);
+    my $workdir = delete $opt->{workdir};
+    my $scp_fn = $opt->{-filelist};
+    my $thread_cnt = $ENV{EV_thread_cnt} || 1;
+    my @scp_part_fns = block_split_scp($scp_fn, $workdir);
+    my @recout_part_fns = map "$_.recout", @scp_part_fns;
+    my @commands = map {
+        hsub(
+            'julius ' . stringify_options(
+                %$opt,
+                -filelist => $_,
+                '2>' => '/tmp/julius-err',
+            ),
+            LANG => 'C',
+            log_cmd => 1,
+            out_fn => "$_.recout",
+        );
+    } @scp_part_fns;
+    run_parallel(\@commands);
+    my $outfile = "$workdir/" . time() . "-$$-julius";
+
+
+    open my $out_fh, '>', $outfile;
+    for my $recout_part_fn (@recout_part_fns) {
+        open my $in_fh, '<', $recout_part_fn or warn("failed opening $recout_part_fn"), next;
+        while (<$in_fh>) {
+            print {$out_fh} $_;
+        }
+    }
+    close $out_fh;
+
+    return $outfile;
+}
+
+sub block_split_scp {
+    my ($scp_fn, $outdir, $part_cnt) = @_;
+    my $scp_bn = basename $scp_fn;
+    my @scp_lines = do {{
+        local @ARGV = $scp_fn;
+        <ARGV>;
+    }};
+    my $line_cnt = @scp_lines;
+    $part_cnt ||= $ENV{EV_thread_cnt} || 1;
+    my @scp_part_fns = map "$outdir/${scp_bn}_$_", 1 .. $part_cnt;
+    my @scp_part_fhs = map {
+        open my $fh, '>', $_ or die "Couldn't open '$_' for writing: $!";
+        $fh;
+    } @scp_part_fns;
+    for my $i (0 .. $#scp_lines) {
+        my $part_no = $part_cnt * $i / $line_cnt;
+        print {$scp_part_fhs[int $part_no]} $scp_lines[$i];
+    }
+    close $_ for @scp_part_fhs;
+    return @scp_part_fns;
 }
 
 sub recout_to_utterance_timespans {

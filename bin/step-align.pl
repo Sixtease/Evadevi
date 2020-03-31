@@ -41,13 +41,13 @@ print STDERR (' ' x 8), "aligning...\n";
 {
     my $workdir = $opt{'align-workdir'};
     mlf2scp(
-        $opt{'train-mlf'}, 
+        $opt{'train-mlf'},
         "$opt{tempdir}/train-mfc.scp",
         "$opt{mfccdir}/*.mfcc",
     );
     my %hvite_opt = (
         '-T' => 1, '-A' => '', '-D' => '', '-l' => '*',
-        '-m' => '', '-a' => '', '-o' => 'SWT', '-b' => 'silence',
+        '-m' => '', '-a' => '', '-o' => 'SWT', '-b' => '<silence>',
         '-C' => $opt{conf},
         '-t' => $ENV{EV_HVite_t}, '-y' => 'lab',
         '-H' => ["$opt{indir}/macros", "$opt{indir}/hmmdefs"],
@@ -60,7 +60,7 @@ print STDERR (' ' x 8), "aligning...\n";
         \%hvite_opt, \@hvite_arg,
         workdir => $workdir,
     );
-    
+
     HTKUtil::remove_empty_sentences_from_mlf(
         "$workdir/transcription-aligned-with-empty.mlf",
         "$workdir/transcription-aligned-without-empty.mlf",

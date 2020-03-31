@@ -43,7 +43,11 @@ while (<>) {
     chomp;
     next SENTENCE if /#!MLF!#/;
     print {$targets[$i]} qq{\n"$_};
-    $had_newline[$i] = (substr($_, -1) eq '\n');
+
+    my $chomped = $_;
+    chomp $chomped;
+    $had_newline[$i] = (length $_ == length $chomped);
+
     $i++;
     $i %= @targets;
 }

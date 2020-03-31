@@ -20,6 +20,7 @@ use JulLib qw(evaluate_hmm);
 
 my %opt = (
     iter => $ENV{EV_iter_triphones} || $ENV{EV_iter} || 2,
+    'triphone-trees' => $ENV{EV_triphone_trees},
 );
 
 GetOptions( \%opt, qw(
@@ -32,7 +33,8 @@ GetOptions( \%opt, qw(
     mfccdir=s
     conf=s
     tree-hed-tmpl=s
-    triphone-tree=s
+    triphone-questions=s
+    triphone-trees=s
     iter=i
     mlf=s
 ));
@@ -44,17 +46,18 @@ print STDERR (' ' x 8), "preparing...\n";
         "$opt{outdir}/0-nontied/base/mktri.hed",
         $opt{triphones},
     );
-    
+
     mktreehed(
         tmpl_fn    => $opt{'tree-hed-tmpl'},
-        qs         => $opt{'triphone-tree'},
+        qs         => $opt{'triphone-questions'},
         monophones => $opt{monophones},
         tiedlist   => $opt{tiedlist},
         fulllist   => $opt{fulllist},
         stats_fn   => "$opt{outdir}/stats",
+        trees_fn   => $opt{'triphone-trees'},
         out        => "$opt{outdir}/1-tied/base/tree.hed",
     );
-    
+
     my @hhed_options = (
         ''   => 'HHEd',
         '-A' => '', '-D' => '', '-T' => 1,
@@ -74,23 +77,21 @@ print STDERR (' ' x 8), "training nontied...\n";
         workdir => "$opt{outdir}/0-nontied/iterations",
         phones => $opt{triphones},
     );
-    
-    my @herest_options = (
-        ''   => 'HERest',
-        '-A' => '', '-D' => '', '-T' => 1,
-        '-C' => $opt{conf},
-        '-I' => $opt{mlf},
-        '-t' => {
-            val => $ENV{EV_HERest_t},
-            no_quotes => 1,
+
+    HTKUtil::iterate(
+        ( map {$_ => $opt{$_}} qw(conf mlf) ),
+        from =>"$opt{outdir}/0-nontied/reestd",
+        to => "$opt{outdir}/0-nontied",
+        scp_fn => "$opt{outdir}/0-nontied/iterations/mfcc.scp",
+        t => $ENV{EV_HERest_t},
+        extra_herest_options => {
+            '-s' => "$opt{outdir}/stats",
         },
-        '-s' => "$opt{outdir}/stats",
-        '-S' => "$opt{outdir}/0-nontied/iterations/mfcc.scp",
-        '-H' => [ "$opt{outdir}/0-nontied/reestd/macros", "$opt{outdir}/0-nontied/reestd/hmmdefs" ],
-        '-M' => "$opt{outdir}/0-nontied",
-        '' => $opt{triphones},
+        parallel_cnt => $ENV{EV_HERest_p},
+        thread_cnt => $ENV{EV_thread_cnt} || 1,
+        workdir => "$opt{outdir}/0-nontied/iterations",
+        phones => $opt{triphones},
     );
-    h(stringify_options(@herest_options));
 }
 
 print STDERR (' ' x 8 ), "tying...\n";
@@ -119,7 +120,7 @@ print STDERR (' ' x 8 ), "training tied...\n";
 print STDERR (' ' x 8 ), "evaluating...\n";
 {
     last unless $ENV{EV_evaluate_steps};
-    
+
     my $score = evaluate_hmm(
         ( map {; $_ => $opt{$_} } qw(conf mfccdir) ),
         hmmdir        => $opt{outdir},
