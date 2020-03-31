@@ -159,10 +159,10 @@ sub split_all {
         my $score = try_phone('*', $indir, $stepdir);
         print "$score\n";
 
-        if ($score < $prev_score) {
+        if ($score <= $max_score) {
             $consecutive_decreases++;
         }
-        elsif ($score > $prev_score) {
+        elsif ($score > $max_score) {
             $consecutive_decreases = 0;
         }
 
